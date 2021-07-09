@@ -52,7 +52,7 @@ def optimize_fire(x0,f,df,params,atol=1e-4,dt = 0.002,logoutput=False):
         F = -df(x,params)
         V = V + 0.5*dt*F
 
-        error = np.linalg.norm(F)/F.size
+        error = max(np.abs(F.min()),F.max())
         if error < atol: break
 
         if logoutput: print(f(x,params),error)
@@ -98,8 +98,6 @@ def optimize_fire2(x0,f,df,params,atol=1e-4,dt=0.002,logoutput=False):
         F = -df(x,params)
         V = V + 0.5*dt*F
 
-        # error = np.linalg.norm(F)/F.size
-        # print(F.min())
         error = max(np.abs(F.min()),F.max())
         if error < atol: break
 
