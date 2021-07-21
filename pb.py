@@ -1,11 +1,17 @@
-import numpy as np
-from scipy.ndimage import convolve1d
+#!/usr/bin/env python3
+
+# This script is the python implementation of the Poisson-Boltzmann equation
+#
 # Author: Elvis do A. Soares
 # Github: @elvissoares
-# Date: 2020-11-18
-# Updated: 2021-06-14
+# Date: 2021-06-02
+# Updated: 2021-07-21
+# Version: 1.0
+#
+import numpy as np
+from scipy.ndimage import convolve1d
 
-" The DFT model for electrolyte solutions using the generalized grand potential"
+" The PB model for electrolyte solutions using the generalized grand potential"
 
 class PBplanar():
     def __init__(self,N,delta,species=2,sigma=np.array([1.0,1.0]),Z=np.array([-1,1])):
