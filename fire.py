@@ -11,7 +11,7 @@ import numpy as np
 
 
 " Global variables for the FIRE algorithm"
-alpha0 = 0.3
+alpha0 = 0.1
 Ndelay = 5
 Nmax = 10000
 finc = 1.1
@@ -21,7 +21,6 @@ Nnegmax = 2000
 
 def optimize_fire(x0,f,df,params,atol=1e-4,dt = 0.002,logoutput=False):
     error = 10*atol 
-    dt = 0.002
     dtmax = 10*dt
     dtmin = 0.02*dt
     alpha = alpha0

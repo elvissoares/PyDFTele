@@ -60,14 +60,14 @@ if __name__ == "__main__":
     from fmt import FMTplanar
 
     if test1: 
-        sigma = np.array([0.3,0.3])
+        sigma = np.array([0.425,0.425])
         delta = 0.025*min(sigma)
-        L = 45*sigma[0]
+        L = 12*sigma[0]
         N = int(L/delta)
         beta = 1.0/40.0
-        Z = np.array([-1,1])
+        Z = np.array([-1,2])
 
-        c = 0.01 #mol/L (equivalent to ionic strength for 1:1)
+        c = 0.5 #mol/L (equivalent to ionic strength for 1:1)
         M2nmunits=6.022e23/1.0e24
         rhob = np.array([-(Z[1]/Z[0])*c,c])*M2nmunits # particles/nm^3
 
@@ -75,8 +75,8 @@ if __name__ == "__main__":
         ele = PBplanar(N,delta,species=2,sigma=sigma,Z=Z)
         x = np.linspace(0,L,N)
 
-        # Gamma = -0.1704/sigma[0]**2
-        Gamma = -3.12
+        Gamma = -0.1704/sigma[0]**2
+        # Gamma = -3.12
         kD = np.sqrt(4*np.pi*ele.lB*np.sum(Z**2*rhob))
 
         n = np.ones((2,N),dtype=np.float32)
@@ -116,5 +116,5 @@ if __name__ == "__main__":
         n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
         n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
 
-        # np.save('profiles-PBplanar-Voukadinova2018-electrolyte-c0.5-sigma-0.1704.npy',[x,n[0],n[1],psi])
-        np.save('profiles-PBplanar-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=0.01M.npy',[x,n[0],n[1],psi])
+        np.save('profiles-PB-electrolyte21-c0.5-sigma-0.1704.npy',[x,n[0],n[1],psi])
+        # np.save('profiles-PB-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=0.01M.npy',[x,n[0],n[1],psi])

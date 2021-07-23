@@ -200,19 +200,19 @@ if __name__ == "__main__":
         plt.show()
         
     if test1: 
-        sigma = np.array([0.3,0.15])
+        sigma = np.array([0.425,0.425])
         delta = 0.025*sigma[1]
-        L = 12.5*sigma[0]
+        L = 10.5*sigma[0]
         N = int(L/delta)
-        Z = np.array([-1,3])
+        Z = np.array([-1,2])
 
-        c = 0.1 #mol/L (equivalent to ionic strength for 1:1)
+        c = 0.5 #mol/L (equivalent to ionic strength for 1:1)
         rhob = np.array([-(Z[1]/Z[0])*c,c])*6.022e23/1.0e24 # particles/nm^3
 
         x = np.linspace(0,L,N)
 
-        # Gamma = 0.7/sigma[0]**2
-        Gamma = -3.12
+        Gamma = -0.1704/sigma[0]**2
+        # Gamma = -3.12
 
         n = np.ones((2,N),dtype=np.float32)
         nsig = np.array([int(0.5*sigma[0]/delta),int(0.5*sigma[1]/delta)])
@@ -245,7 +245,7 @@ if __name__ == "__main__":
         psi[:nsig[0]] = psi0*(1/kD+0.5*sigma[0]-x[:nsig[0]])
         psi[nsig[0]:] = psi0*np.exp(-kD*(x[nsig[0]:]-0.5*sigma[0]))/kD
     
-        [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,1.0e-8,0.02,False)
+        [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,1.0e-8,0.05,False)
 
         psi[:] = varsol
 
@@ -269,7 +269,6 @@ if __name__ == "__main__":
             return -ele.dOmegadpsi(nn,psi,[Gamma,0.0])*delta/L
 
         mu = np.log(rhob) + fmt.mu(rhob) + ele.mu(rhob)
-        # mu = np.log(rhob) + fmt.mu(rhob)
 
         # Now we will solve the DFT equations
         def Omega(var,psi):
@@ -278,8 +277,6 @@ if __name__ == "__main__":
             Fid = np.sum(nn*(var-1.0))*delta
             Fhs = np.sum(fmt.Phi(nn))*delta
             Fele = ele.Fint(n,psi) + ele.Fcorr(n)
-            # Fele = ele.Fint(n,psi)
-            # Fele = ele.free_energy(n,psi)
             return (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*nn*delta)+Gamma*psi[0])/L
 
         def dOmegadnR(var,psi):
@@ -291,7 +288,6 @@ if __name__ == "__main__":
 
             c1hs = fmt.c1(nn)
             c1ele = ele.c1(nn,psi)
-            # c1ele = ele.c1long(psi)
             aux = nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
             aux[0,-nsig[0]:] = 0.0
             aux[1,-nsig[1]:] = 0.0
@@ -312,8 +308,8 @@ if __name__ == "__main__":
         c1nonMSA = ele.c1nonMSA(n)+munonMSA[:,np.newaxis]
         # print(c1nonMSA)
 
-        # np.save('profiles-DFTcorr-electrolyte22-c0.5-sigma-0.1704.npy',[x,n[0],n[1],psi])
-        np.save('profiles-DFTcorr-Voukadinova2018-electrolyte-Fig3-Z+=3-rho+=0.1M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1],c1nonMSA[0],c1nonMSA[1]])
+        np.save('profiles-DFTcorr-electrolyte21-c0.5-sigma-0.1704.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1],c1nonMSA[0],c1nonMSA[1]])
+        # np.save('profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=3-rho+=1.0M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1],c1nonMSA[0],c1nonMSA[1]])
 
     ##################################################################################
     if test2: 
