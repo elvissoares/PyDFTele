@@ -11,8 +11,8 @@ import numpy as np
 
 
 " Global variables for the FIRE algorithm"
-alpha0 = 0.1
-Ndelay = 5
+alpha0 = 0.25
+Ndelay = 20
 Nmax = 10000
 finc = 1.1
 fdec = 0.5

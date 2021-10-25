@@ -21,8 +21,12 @@ class PBplanar():
         self.sigma = sigma
         self.species = species
         self.Z = Z
+        self.nhalf = int(0.5*self.L/self.delta)
 
         self.lB = 0.714 # in nm (for water)
+    
+    def Debye_constant(self,rhob):
+        return np.sqrt(4*np.pi*self.lB*np.sum(self.Z**2*rhob))
 
     def Fele(self,psi):
         f = convolve1d(psi, weights=[-1,1], mode='nearest')/self.delta
@@ -45,8 +49,17 @@ class PBplanar():
 
     def dOmegadpsi(self,rho,psi,Gamma):
         lappsi = (1/(4*np.pi*self.lB))*convolve1d(psi, weights=[1,-2,1], mode='nearest')/self.delta**2
-        lappsi[0] += Gamma/self.delta
-        # lappsi[-1] += Gamma/self.delta
+        lappsi[0] += Gamma[0]/self.delta
+        lappsi[-1] += Gamma[1]/self.delta
+        f = np.zeros(self.N)
+        for i in range(self.species):
+            f += rho[i,:]*self.Z[i]
+        return lappsi + f
+
+    def dOmegadpsi_fixedpotential(self,rho,psi,psi0):
+        psi[0] = psi0[0]
+        psi[-1] = psi0[1]
+        lappsi = (1/(4*np.pi*self.lB))*convolve1d(psi, weights=[1,-2,1], mode='nearest')/self.delta**2
         f = np.zeros(self.N)
         for i in range(self.species):
             f += rho[i,:]*self.Z[i]
