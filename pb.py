@@ -5,7 +5,7 @@
 # Author: Elvis do A. Soares
 # Github: @elvissoares
 # Date: 2021-06-02
-# Updated: 2021-07-21
+# Updated: 2021-11-10
 # Version: 1.0
 #
 import numpy as np
