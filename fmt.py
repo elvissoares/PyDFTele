@@ -2,34 +2,33 @@ import numpy as np
 from scipy.special import jv, spherical_jn
 from scipy.ndimage import convolve1d
 import pyfftw
-import multiprocessing
 from pyfftw.interfaces.scipy_fftpack import fft2,ifft2,fftn,ifftn
 # Author: Elvis do A. Soares
 # Github: @elvissoares
 # Date: 2020-06-16
-# Updated: 2020-11-30
+# Updated: 2021-11-17
 pyfftw.config.NUM_THREADS = 4
 pyfftw.config.PLANNER_EFFORT = 'FFTW_ESTIMATE'
 
 twopi = 2*np.pi
 
-def sigmaLancsozFT(kx,ky,kz,kcut):
+def dLancsozFT(kx,ky,kz,kcut):
     return np.sinc(kx/kcut[0])*np.sinc(ky/kcut[1])*np.sinc(kz/kcut[2])
 
 def translationFT(kx,ky,kz,a):
     return np.exp(1.0j*(kx*a[0]+ky*a[1]+kz*a[2]))
 
-def w3FT(k,sigma=1.0):
-    return np.piecewise(k,[k*sigma<=1e-3,k*sigma>1e-3],[np.pi*sigma**3/6,lambda k: (np.pi*sigma**2/k)*spherical_jn(1,0.5*sigma*k)])
+def w3FT(k,d=1.0):
+    return np.piecewise(k,[k*d<=1e-3,k*d>1e-3],[np.pi*d**3/6,lambda k: (np.pi*d**2/k)*spherical_jn(1,0.5*d*k)])
 
-def w2FT(k,sigma=1.0):
-    return np.pi*sigma**2*spherical_jn(0,0.5*sigma*k)
+def w2FT(k,d=1.0):
+    return np.pi*d**2*spherical_jn(0,0.5*d*k)
 
-def wtensFT(k,sigma=1.0):
-    return np.pi*sigma**2*spherical_jn(2,0.5*sigma*k)
+def wtensFT(k,d=1.0):
+    return np.pi*d**2*spherical_jn(2,0.5*d*k)
 
-def wtensoverk2FT(k,sigma=1.0):
-    return np.piecewise(k,[k*sigma<=1e-3,k*sigma>1e-3],[np.pi*sigma**4/60,lambda k:(np.pi*sigma**2/k**2)*spherical_jn(2,0.5*sigma*k)])
+def wtensoverk2FT(k,d=1.0):
+    return np.piecewise(k,[k*d<=1e-3,k*d>1e-3],[np.pi*d**4/60,lambda k:(np.pi*d**2/k**2)*spherical_jn(2,0.5*d*k)])
 
 def phi2func(eta):
     return np.piecewise(eta,[eta<=1e-3,eta>1e-3],[lambda eta: 1+eta**2/9,lambda eta: 1+(2*eta-eta**2+2*np.log(1-eta)*(1-eta))/(3*eta)])
@@ -55,12 +54,12 @@ def dphi3dnfunc(eta):
 # WBII: White Bear version II
 
 class FMT3D():
-    def __init__(self,N,delta,sigma=1.0,method='WBI'):
+    def __init__(self,N,delta,d=1.0,method='WBI'):
         self.method = method
         self.N = N
         self.delta = delta
         self.L = N*delta
-        self.sigma = sigma
+        self.d = d
 
         self.w3_hat = np.empty((self.N[0],self.N[1],self.N[2]),dtype=np.complex64)
         self.w2_hat = np.empty((self.N[0],self.N[1],self.N[2]),dtype=np.complex64)
@@ -81,13 +80,13 @@ class FMT3D():
         K = np.sqrt(Kx**2 + Ky**2 + Kz**2)
         del kx,ky,kz
 
-        self.w3_hat[:] = w3FT(K)*sigmaLancsozFT(Kx,Ky,Kz,kcut)
+        self.w3_hat[:] = w3FT(K)*dLancsozFT(Kx,Ky,Kz,kcut)
 
-        self.w2_hat[:] = w2FT(K)*sigmaLancsozFT(Kx,Ky,Kz,kcut)
+        self.w2_hat[:] = w2FT(K)*dLancsozFT(Kx,Ky,Kz,kcut)
 
-        w2tens_hat = wtensFT(K)*sigmaLancsozFT(Kx,Ky,Kz,kcut)
+        w2tens_hat = wtensFT(K)*dLancsozFT(Kx,Ky,Kz,kcut)
 
-        w2tensoverk2_hat = wtensoverk2FT(K)*sigmaLancsozFT(Kx,Ky,Kz,kcut)
+        w2tensoverk2_hat = wtensoverk2FT(K)*dLancsozFT(Kx,Ky,Kz,kcut)
 
         self.w2vec_hat[0] = -1.0j*Kx*self.w3_hat
         self.w2vec_hat[1] = -1.0j*Ky*self.w3_hat
@@ -114,9 +113,9 @@ class FMT3D():
         self.n2vec[0] = ifftn(n_hat*self.w2vec_hat[0]).real
         self.n2vec[1] = ifftn(n_hat*self.w2vec_hat[1]).real
         self.n2vec[2] = ifftn(n_hat*self.w2vec_hat[2]).real
-        self.n1vec[0] = self.n2vec[0]/(twopi*self.sigma)
-        self.n1vec[1] = self.n2vec[1]/(twopi*self.sigma)
-        self.n1vec[2] = self.n2vec[2]/(twopi*self.sigma)
+        self.n1vec[0] = self.n2vec[0]/(twopi*self.d)
+        self.n1vec[1] = self.n2vec[1]/(twopi*self.d)
+        self.n1vec[2] = self.n2vec[2]/(twopi*self.d)
         self.n2tens[0,0] = ifftn(n_hat*self.w2tens_hat[0,0]).real
         self.n2tens[0,1] = ifftn(n_hat*self.w2tens_hat[0,1]).real
         self.n2tens[0,2] = ifftn(n_hat*self.w2tens_hat[0,2]).real
@@ -132,8 +131,8 @@ class FMT3D():
         # plt.ylabel('$y$')
         # plt.show()
 
-        self.n0 = self.n2/(np.pi*self.sigma**2)
-        self.n1 = self.n2/(twopi*self.sigma)
+        self.n0 = self.n2/(np.pi*self.d**2)
+        self.n1 = self.n2/(twopi*self.d)
         self.oneminusn3 = 1-self.n3
 
         if self.method == 'RF' or self.method == 'WBI': 
@@ -191,9 +190,9 @@ class FMT3D():
         self.dPhidn2tens21 = fftn((4.5*self.n2vec[2]*self.n2vec[1]-13.5*(self.n2tens[2,1]*self.n2tens[1,1]+self.n2tens[2,0]*self.n2tens[0,1]+self.n2tens[2,2]*self.n2tens[2,1]))*self.phi3/(24*np.pi*self.oneminusn3**2))
         self.dPhidn2tens22 = fftn((4.5*self.n2vec[2]*self.n2vec[2]-13.5*(self.n2tens[2,1]*self.n2tens[1,2]+self.n2tens[2,0]*self.n2tens[0,2]+self.n2tens[2,2]*self.n2tens[2,2]))*self.phi3/(24*np.pi*self.oneminusn3**2))
 
-        dPhidn_hat = (self.dPhidn2 + self.dPhidn1/(twopi*self.sigma) + self.dPhidn0/(np.pi*self.sigma**2))*self.w2_hat
+        dPhidn_hat = (self.dPhidn2 + self.dPhidn1/(twopi*self.d) + self.dPhidn0/(np.pi*self.d**2))*self.w2_hat
         dPhidn_hat += self.dPhidn3*self.w3_hat
-        dPhidn_hat -= (self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.sigma))*self.w2vec_hat[0] +(self.dPhidn2vec1+self.dPhidn1vec1/(twopi*self.sigma))*self.w2vec_hat[1] + (self.dPhidn2vec2+self.dPhidn1vec2/(twopi*self.sigma))*self.w2vec_hat[2]
+        dPhidn_hat -= (self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.d))*self.w2vec_hat[0] +(self.dPhidn2vec1+self.dPhidn1vec1/(twopi*self.d))*self.w2vec_hat[1] + (self.dPhidn2vec2+self.dPhidn1vec2/(twopi*self.d))*self.w2vec_hat[2]
         dPhidn_hat += self.dPhidn2tens00*self.w2tens_hat[0,0] + self.dPhidn2tens01*self.w2tens_hat[0,1] + self.dPhidn2tens02*self.w2tens_hat[0,2] + self.dPhidn2tens10*self.w2tens_hat[1,0] + self.dPhidn2tens11*self.w2tens_hat[1,1] + self.dPhidn2tens12*self.w2tens_hat[1,2] + self.dPhidn2tens20*self.w2tens_hat[2,0] + self.dPhidn2tens21*self.w2tens_hat[2,1] + self.dPhidn2tens22*self.w2tens_hat[2,2]
 
         del self.dPhidn0,self.dPhidn1,self.dPhidn2,self.dPhidn3,self.dPhidn1vec0,self.dPhidn1vec1,self.dPhidn1vec2,self.dPhidn2vec0,self.dPhidn2vec1,self.dPhidn2vec2, self.dPhidn2tens00, self.dPhidn2tens01, self.dPhidn2tens02, self.dPhidn2tens10, self.dPhidn2tens11, self.dPhidn2tens12, self.dPhidn2tens20, self.dPhidn2tens21, self.dPhidn2tens22
@@ -204,9 +203,9 @@ class FMT3D():
         return ifftn(-self.c1_hat(n_hat)).real
 
     def mu(self,rhob):
-        n3 = np.sum(rhob*np.pi*self.sigma**3/6)
-        n2 = np.sum(rhob*np.pi*self.sigma**2)
-        n1 = np.sum(rhob*self.sigma/2)
+        n3 = np.sum(rhob*np.pi*self.d**3/6)
+        n2 = np.sum(rhob*np.pi*self.d**2)
+        n1 = np.sum(rhob*self.d/2)
         n0 = np.sum(rhob)
 
         if self.method == 'RF' or self.method == 'WBI': 
@@ -231,34 +230,34 @@ class FMT3D():
         dPhidn2 = n1*phi2/(1-n3) + (3*n2**2)*phi3/(24*np.pi*(1-n3)**2)
         dPhidn3 = n0/(1-n3) +(n1*n2)*(dphi2dn3 + phi2/(1-n3))/(1-n3) + (n2**3)*(dphi3dn3+2*phi3/(1-n3))/(24*np.pi*(1-n3)**2)
 
-        return (dPhidn0+dPhidn1*self.sigma/2+dPhidn2*np.pi*self.sigma**2+dPhidn3*np.pi*self.sigma**3/6)
+        return (dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6)
 
 ####################################################
 ### The FMT functional on 2D                     ###
 ####################################################
-def sigmaLancsozFT2d(kx,ky,kcut):
+def dLancsozFT2d(kx,ky,kcut):
     return np.sinc(kx/kcut[0])*np.sinc(ky/kcut[1])
 
 def translationFT2d(kx,ky,a):
     return np.exp(1.0j*(kx*a[0]+ky*a[1]))
 
-def w2FT2d(k,sigma):
-    return np.piecewise(k,[k<=1e-12,k>1e-12],[np.pi*sigma**2/4,lambda k: (np.pi*sigma/k)*jv(1,0.5*k*sigma)])
+def w2FT2d(k,d):
+    return np.piecewise(k,[k<=1e-12,k>1e-12],[np.pi*d**2/4,lambda k: (np.pi*d/k)*jv(1,0.5*k*d)])
 
-def w1FT2d(k,sigma):
-    return np.pi*sigma*jv(0,0.5*k*sigma)
+def w1FT2d(k,d):
+    return np.pi*d*jv(0,0.5*k*d)
 
-def w1tensFT2d(k,sigma):
-    return np.piecewise(k,[k<=1e-6,k>1e-6],[np.pi*sigma**2/32,lambda k: (np.pi*sigma/k**2)*jv(2,0.5*k*sigma)])
+def w1tensFT2d(k,d):
+    return np.piecewise(k,[k<=1e-6,k>1e-6],[np.pi*d**2/32,lambda k: (np.pi*d/k**2)*jv(2,0.5*k*d)])
 
 # The Roth Functional
 class FMT2D():
-    def __init__(self,N,L,sigma=1.0):
+    def __init__(self,N,L,d=1.0):
         self.dim = 2
         self.N = N
         self.L = L
         self.delta = L/N
-        self.sigma = sigma
+        self.d = d
 
         self.w2_hat = np.empty((self.N[0],self.N[1]),dtype=np.complex64)
         self.w1_hat = np.empty((self.N[0],self.N[1]),dtype=np.complex64)
@@ -281,23 +280,23 @@ class FMT2D():
         K = np.sqrt(Kx**2+Ky**2)
         dealias = np.array((np.abs(Kx) < kcut[0] )*(np.abs(Ky) < kcut[1] ),dtype =bool)
 
-        # self.w2_hat[:] = w2FT(K,self.sigma)*sigmaLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
+        # self.w2_hat[:] = w2FT(K,self.d)*dLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
 
-        # self.w1_hat[:] = w1FT(K,self.sigma)*sigmaLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
+        # self.w1_hat[:] = w1FT(K,self.d)*dLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
 
-        # w1tens_aux = w1tensFT(K,self.sigma)*sigmaLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
+        # w1tens_aux = w1tensFT(K,self.d)*dLancsozFT(Kx,Ky,kcut)*translationFT(Kx,Ky,0.5*self.L)
 
-        self.w2_hat[:] = w2FT2d(K,self.sigma)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
+        self.w2_hat[:] = w2FT2d(K,self.d)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
 
-        self.w1_hat[:] = w1FT2d(K,self.sigma)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
+        self.w1_hat[:] = w1FT2d(K,self.d)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
 
-        w1tens_aux = w1tensFT2d(K,self.sigma)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
+        w1tens_aux = w1tensFT2d(K,self.d)*dealias*translationFT2d(Kx,Ky,0.5*self.L)
 
         self.w1vec_hat[0] = -1.0j*Kx*self.w2_hat
         self.w1vec_hat[1] = -1.0j*Ky*self.w2_hat
-        self.w1tens_hat[0,0] = -Kx*Kx*w1tens_aux + 2*self.w2_hat/self.sigma
+        self.w1tens_hat[0,0] = -Kx*Kx*w1tens_aux + 2*self.w2_hat/self.d
         self.w1tens_hat[0,1] = -Kx*Ky*w1tens_aux
-        self.w1tens_hat[1,1] = -Ky*Ky*w1tens_aux + 2*self.w2_hat/self.sigma
+        self.w1tens_hat[1,1] = -Ky*Ky*w1tens_aux + 2*self.w2_hat/self.d
         self.w1tens_hat[1,0] = -Ky*Kx*w1tens_aux
 
         del w1tens_aux, kx, ky, Kx, Ky, K, dealias
@@ -312,7 +311,7 @@ class FMT2D():
         self.n1tens[1,1] = ifft2(n_hat*self.w1tens_hat[1,1]).real
         self.n1tens[1,0] = ifft2(n_hat*self.w1tens_hat[1,0]).real
 
-        self.n0[:] = self.n1/(np.pi*self.sigma)
+        self.n0[:] = self.n1/(np.pi*self.d)
         self.oneminusn2 = 1-self.n2 
 
     def Phi(self,n_hat):
@@ -350,12 +349,12 @@ class FMT2D():
 ### The FMT Functional on 1d slab geometry       ###
 ####################################################
 class FMTplanar():
-    def __init__(self,N,delta,species=1,sigma=np.array([1.0]),method='WBI'):
+    def __init__(self,N,delta,species=1,d=np.array([1.0]),method='WBI'):
         self.method = method
         self.N = N
         self.delta = delta
         self.L = N*delta
-        self.sigma = sigma
+        self.d = d
         self.species = species
 
         self.n3 = np.empty(self.N,dtype=np.float32)
@@ -369,20 +368,20 @@ class FMTplanar():
 
         for i in range(self.species):
 
-            nsig = int(0.5*self.sigma[i]/self.delta)
+            nsig = int(0.5*self.d[i]/self.delta)
 
-            x = np.linspace(-0.5*self.sigma[i],0.5*self.sigma[i],2*nsig)
-            self.w3[i,self.N//2-nsig:self.N//2+nsig] = np.pi*((0.5*self.sigma[i])**2-x**2)
-            self.w2[i,self.N//2-nsig:self.N//2+nsig] = self.sigma[i]*np.pi
+            x = np.linspace(-0.5*self.d[i],0.5*self.d[i],2*nsig)
+            self.w3[i,self.N//2-nsig:self.N//2+nsig] = np.pi*((0.5*self.d[i])**2-x**2)
+            self.w2[i,self.N//2-nsig:self.N//2+nsig] = self.d[i]*np.pi
             self.w2vec[i,self.N//2-nsig:self.N//2+nsig] = twopi*x
 
     def weighted_densities(self,rho):
         self.n3[:] = convolve1d(rho[0], weights=self.w3[0], mode='nearest')*self.delta
         self.n2[:] = convolve1d(rho[0], weights=self.w2[0], mode='nearest')*self.delta
         self.n2vec[:] = convolve1d(rho[0], weights=self.w2vec[0], mode='nearest')*self.delta
-        self.n1vec = self.n2vec/(twopi*self.sigma[0])
-        self.n0 = self.n2/(np.pi*self.sigma[0]**2)
-        self.n1 = self.n2/(twopi*self.sigma[0])
+        self.n1vec = self.n2vec/(twopi*self.d[0])
+        self.n0 = self.n2/(np.pi*self.d[0]**2)
+        self.n1 = self.n2/(twopi*self.d[0])
         
         for i in range(1,self.species):
             self.n3[:] += convolve1d(rho[i], weights=self.w3[i], mode='nearest')*self.delta
@@ -390,9 +389,9 @@ class FMTplanar():
             n2vec = convolve1d(rho[i], weights=self.w2vec[i], mode='nearest')*self.delta
             self.n2[:] += n2
             self.n2vec[:] += n2vec
-            self.n1vec[:] += n2vec/(twopi*self.sigma[i])
-            self.n0[:] += n2/(np.pi*self.sigma[i]**2)
-            self.n1[:] += n2/(twopi*self.sigma[i])
+            self.n1vec[:] += n2vec/(twopi*self.d[i])
+            self.n0[:] += n2/(np.pi*self.d[i]**2)
+            self.n1[:] += n2/(twopi*self.d[i])
             
         self.oneminusn3 = 1-self.n3
 
@@ -431,7 +430,7 @@ class FMTplanar():
         self.dPhidn2vec0 = -self.n1vec*self.phi2/self.oneminusn3  - self.n2*self.n2vec*self.phi3/(4*np.pi*self.oneminusn3**2)
 
         for i in range(self.species):
-            self.c1array[i] = -convolve1d(self.dPhidn2 + self.dPhidn1/(twopi*self.sigma[i]) + self.dPhidn0/(np.pi*self.sigma[i]**2), weights=self.w2[i], mode='nearest')*self.delta - convolve1d(self.dPhidn3, weights=self.w3[i], mode='nearest')*self.delta + convolve1d(self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.sigma[i]), weights=self.w2vec[i], mode='nearest')*self.delta
+            self.c1array[i] = -convolve1d(self.dPhidn2 + self.dPhidn1/(twopi*self.d[i]) + self.dPhidn0/(np.pi*self.d[i]**2), weights=self.w2[i], mode='nearest')*self.delta - convolve1d(self.dPhidn3, weights=self.w3[i], mode='nearest')*self.delta + convolve1d(self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.d[i]), weights=self.w2vec[i], mode='nearest')*self.delta
 
         del self.dPhidn0,self.dPhidn1,self.dPhidn2,self.dPhidn3,self.dPhidn1vec0,self.dPhidn2vec0,
 
@@ -439,9 +438,9 @@ class FMTplanar():
         else: return self.c1array
 
     def mu(self,rhob):
-        n3 = np.sum(rhob*np.pi*self.sigma**3/6)
-        n2 = np.sum(rhob*np.pi*self.sigma**2)
-        n1 = np.sum(rhob*self.sigma/2)
+        n3 = np.sum(rhob*np.pi*self.d**3/6)
+        n2 = np.sum(rhob*np.pi*self.d**2)
+        n1 = np.sum(rhob*self.d/2)
         n0 = np.sum(rhob)
 
         if self.method == 'RF' or self.method == 'WBI': 
@@ -466,18 +465,18 @@ class FMTplanar():
         dPhidn2 = n1*phi2/(1-n3) + (3*n2**2)*phi3/(24*np.pi*(1-n3)**2)
         dPhidn3 = n0/(1-n3) +(n1*n2)*(dphi2dn3 + phi2/(1-n3))/(1-n3) + (n2**3)*(dphi3dn3+2*phi3/(1-n3))/(24*np.pi*(1-n3)**2)
 
-        if (self.species==1): return (dPhidn0+dPhidn1*self.sigma/2+dPhidn2*np.pi*self.sigma**2+dPhidn3*np.pi*self.sigma**3/6)[0]
-        else: return (dPhidn0+dPhidn1*self.sigma/2+dPhidn2*np.pi*self.sigma**2+dPhidn3*np.pi*self.sigma**3/6)
+        if (self.species==1): return (dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6)[0]
+        else: return (dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6)
 
 
 ####################################################
 class FMTspherical():
-    def __init__(self,N,delta,sigma=1.0,method='WBI'):
+    def __init__(self,N,delta,d=1.0,method='WBI'):
         self.method = method
         self.N = N
         self.delta = delta
         self.L = N*delta
-        self.sigma = sigma
+        self.d = d
 
         self.n3 = np.empty(self.N,dtype=np.float32)
         self.n2 = np.empty(self.N,dtype=np.float32)
@@ -486,16 +485,16 @@ class FMTspherical():
         self.r = np.linspace(0,self.L,self.N)
         self.rmed = self.r + 0.5*self.delta
 
-        self.nsig = int(self.sigma/self.delta)
+        self.nsig = int(self.d/self.delta)
 
         self.w3 = np.zeros(self.nsig,dtype=np.float32)
         self.w2 = np.zeros(self.nsig,dtype=np.float32)
         self.w2vec = np.zeros(self.nsig,dtype=np.float32)
         
-        r = np.linspace(-0.5*self.sigma,0.5*self.sigma,self.nsig)
+        r = np.linspace(-0.5*self.d,0.5*self.d,self.nsig)
         
-        self.w3[:] = np.pi*((0.5*self.sigma)**2-r**2)
-        self.w2[:] = self.sigma*np.pi
+        self.w3[:] = np.pi*((0.5*self.d)**2-r**2)
+        self.w2[:] = self.d*np.pi
         self.w2vec[:] = twopi*r
         # print(self.w3[0],self.w3[-1])
         # plt.plot(r,self.w3,'--',color='grey')
@@ -506,9 +505,9 @@ class FMTspherical():
         self.n2[:] = convolve1d(rho*self.r, weights=self.w2, mode='nearest')*self.delta/self.rmed
         self.n2vec[:] = self.n3/self.rmed + convolve1d(rho*self.r, weights=self.w2vec, mode='nearest')*self.delta/self.rmed
 
-        self.n1vec = self.n2vec/(twopi*self.sigma)
-        self.n0 = self.n2/(np.pi*self.sigma**2)
-        self.n1 = self.n2/(twopi*self.sigma)
+        self.n1vec = self.n2vec/(twopi*self.d)
+        self.n0 = self.n2/(np.pi*self.d**2)
+        self.n1 = self.n2/(twopi*self.d)
         self.oneminusn3 = 1-self.n3
 
         plt.plot(self.r,rho,'--',color='grey')
@@ -553,9 +552,9 @@ class FMTspherical():
         self.dPhidn1vec0 = -self.n2vec*self.phi2/self.oneminusn3 
         self.dPhidn2vec0 = -self.n1vec*self.phi2/self.oneminusn3  - self.n2*self.n2vec*self.phi3/(4*np.pi*self.oneminusn3**2)
 
-        dPhidn = convolve1d((self.dPhidn2 + self.dPhidn1/(twopi*self.sigma) + self.dPhidn0/(np.pi*self.sigma**2))*self.r, weights=self.w2, mode='nearest')*self.delta/self.rmed
+        dPhidn = convolve1d((self.dPhidn2 + self.dPhidn1/(twopi*self.d) + self.dPhidn0/(np.pi*self.d**2))*self.r, weights=self.w2, mode='nearest')*self.delta/self.rmed
         dPhidn += convolve1d(self.dPhidn3*self.r, weights=self.w3, mode='nearest')*self.delta/self.rmed
-        dPhidn += convolve1d((self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.sigma))*self.r, weights=self.w3, mode='nearest')*self.delta/(self.rmed)**2 - convolve1d((self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.sigma))*self.r, weights=self.w2vec, mode='nearest')*self.delta/self.rmed
+        dPhidn += convolve1d((self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.d))*self.r, weights=self.w3, mode='nearest')*self.delta/(self.rmed)**2 - convolve1d((self.dPhidn2vec0+self.dPhidn1vec0/(twopi*self.d))*self.r, weights=self.w2vec, mode='nearest')*self.delta/self.rmed
 
         del self.dPhidn0,self.dPhidn1,self.dPhidn2,self.dPhidn3,self.dPhidn1vec0,self.dPhidn2vec0,
         
@@ -598,10 +597,10 @@ if __name__ == "__main__":
 
         cmap = plt.get_cmap('jet')
         # cp = ax.contourf(X, Y, w[:,:,N//2].real/wmax,20, cmap=cmap)
-        # # ax.set_title(r'$\omega_3(r)=\Theta(\sigma/2-r)$')
+        # # ax.set_title(r'$\omega_3(r)=\Theta(\d/2-r)$')
         # fig.colorbar(cp,ticks=[0,0.2,0.4,0.6,0.8,1.0]) 
-        # ax.set_xlabel(r'$x/\sigma$')
-        # ax.set_ylabel(r'$y/\sigma$')
+        # ax.set_xlabel(r'$x/\d$')
+        # ax.set_ylabel(r'$y/\d$')
         # fig.savefig('omega3-N%d.pdf'% N, bbox_inches='tight')
         # plt.show()
         # plt.close()
@@ -615,10 +614,10 @@ if __name__ == "__main__":
 
         print(w.real.sum(),np.pi)
         cp2 = ax.contourf(X, Y, w[:,:,N//2].real/wmax,20, cmap=cmap)
-        # ax.set_title(r'$\omega_2(r)=\delta(\sigma/2-r)$')
+        # ax.set_title(r'$\omega_2(r)=\delta(\d/2-r)$')
         fig.colorbar(cp2,ticks=[0,0.2,0.4,0.6,0.8,1.0]) 
-        ax.set_xlabel(r'$x/\sigma$')
-        ax.set_ylabel(r'$y/\sigma$')
+        ax.set_xlabel(r'$x/\d$')
+        ax.set_ylabel(r'$y/\d$')
         fig.savefig('omega2-N%d.pdf'% N, bbox_inches='tight')
         plt.show()
         plt.close()
@@ -672,8 +671,8 @@ if __name__ == "__main__":
             [xdata, rhodata] = [data[:,0],data[:,1]]
             plt.scatter(xdata,rhodata,marker='o',edgecolors='C0',facecolors='none',label='MC')
             plt.plot(x,n[0],label='DFT')
-            plt.xlabel(r'$x/\sigma$')
-            plt.ylabel(r'$\rho(x) \sigma^3$')
+            plt.xlabel(r'$x/\d$')
+            plt.ylabel(r'$\rho(x) \d^3$')
             plt.xlim(0.5,3)
             # plt.ylim(0.0,7)
             plt.legend(loc='best')
@@ -685,22 +684,22 @@ if __name__ == "__main__":
         delta = 0.01
         N = 1500
         L = N*delta
-        sigma = np.array([1.0,3.0])
-        fmt = FMTplanar(N,delta,species=2,sigma=sigma)
+        d = np.array([1.0,3.0])
+        fmt = FMTplanar(N,delta,species=2,d=d)
 
         n = 0.01*np.ones((2,N),dtype=np.float32)
-        nsig = int(0.5*sigma[0]/delta)
+        nsig = int(0.5*d[0]/delta)
         n[0,:nsig] = 1.0e-16
-        nsig2 = int(0.5*sigma[1]/delta)
+        nsig2 = int(0.5*d[1]/delta)
         n[1,:nsig2] = 1.0e-16
-        # n[1] = n[1]/sigma[1]**3
+        # n[1] = n[1]/d[1]**3
 
         x = np.linspace(0,L,N)
 
         # plt.plot(x,n[0],label='DFT')
-        # plt.plot(x,n[1]*sigma[1]**3,label='DFT')
-        # plt.xlabel(r'$x/\sigma$')
-        # plt.ylabel(r'$\rho(x) \sigma^3$')
+        # plt.plot(x,n[1]*d[1]**3,label='DFT')
+        # plt.xlabel(r'$x/\d$')
+        # plt.ylabel(r'$\rho(x) \d^3$')
         # plt.show()
 
         lnn = np.log(n)
@@ -722,8 +721,8 @@ if __name__ == "__main__":
 
         eta = 0.39
         x1 = 0.25
-        r = sigma[0]/sigma[1]
-        rhob = np.array([eta/(np.pi*sigma[0]**3*(1+(1-x1)/x1/r**3)/6), eta/(np.pi*sigma[0]**3*(1+(1-x1)/x1/r**3)/6)*(1-x1)/x1])
+        r = d[0]/d[1]
+        rhob = np.array([eta/(np.pi*d[0]**3*(1+(1-x1)/x1/r**3)/6), eta/(np.pi*d[0]**3*(1+(1-x1)/x1/r**3)/6)*(1-x1)/x1])
         # mu = np.log(rhob) + np.array([1.68465,9.21796])
         mu = np.log(rhob) + fmt.mu(rhob)
 
@@ -746,7 +745,7 @@ if __name__ == "__main__":
         [xdata, rhodata] = [data[:,0],data[:,1]]
         plt.scatter(xdata,rhodata,marker='o',edgecolors='C0',facecolors='none',label='MC')
         plt.plot(x,n[0]/rhob[0],label='DFT')
-        plt.xlabel(r'$x/\sigma_1$')
+        plt.xlabel(r'$x/\d_1$')
         plt.ylabel(r'$\rho(x)/\rho_b$')
         plt.xlim(0.5,8)
         plt.ylim(0.0,3.0)
@@ -759,7 +758,7 @@ if __name__ == "__main__":
         [xdata, rhodata] = [data[:,0],data[:,1]]
         plt.scatter(xdata,rhodata,marker='o',edgecolors='C1',facecolors='none',label='MC')
         plt.plot(x,n[1]/rhob[1],'C1',label='DFT')
-        plt.xlabel(r'$x/\sigma_1$')
+        plt.xlabel(r'$x/\d_1$')
         plt.ylabel(r'$\rho(x)/\rho_b$')
         plt.xlim(1.5,8)
         plt.ylim(0.0,7)
@@ -808,7 +807,7 @@ if __name__ == "__main__":
             # [xdata, rhodata] = [data[:,0],data[:,1]]
             # plt.scatter(xdata,rhodata,marker='o',edgecolors='C0',facecolors='none',label='MC')
             plt.plot(r,n/rhob,label='DFT')
-            plt.xlabel(r'$r/\sigma$')
+            plt.xlabel(r'$r/\d$')
             plt.ylabel(r'$g(r)$')
             plt.xlim(1.0,2.2)
             plt.ylim(0.5,6)
@@ -879,14 +878,14 @@ if __name__ == "__main__":
 
             plt.imshow(n[:,:,N//2]/rhobcalc, cmap='Greys_r')
             plt.colorbar(label=r'$\rho(x,y,0)/\rho_b$')
-            plt.xlabel('$x/\\sigma$')
-            plt.ylabel('$y/\\sigma$')
+            plt.xlabel('$x/\\d$')
+            plt.ylabel('$y/\\d$')
             plt.savefig('densitymap-N%d.pdf'% N, bbox_inches='tight')
             # plt.show()
             plt.close()
 
             plt.plot(z,n[:,N//2,N//2]/rhobcalc)
-            plt.xlabel(r'$x/\sigma$')
+            plt.xlabel(r'$x/\d$')
             plt.ylabel(r'$\rho(x,0,0)/\rho_b$')
             # plt.xlim(0.5,3)
             # plt.ylim(0.0,5)
@@ -1077,7 +1076,7 @@ if __name__ == "__main__":
             #         rho1 += np.exp(-1.0j*n1*kx*R[0,0]-1.0j*n1*ky*R[0,1]-1.0j*n1*kz*R[0,2])
             #         rho2 += np.exp(-1.0j*kx*n1*R[1,0]-1.0j*n1*ky*R[1,1]-1.0j*n1*kz*R[1,2])
             #         rho3 += np.exp(-1.0j*kx*n1*R[2,0]-1.0j*n1*ky*R[2,1]-1.0j*n1*kz*R[2,2])
-            #     return np.exp(-0.25*k2/alpha)*rho1*rho2*rho3*sigmaLancsozFT(kx,ky,kz,kcut)
+            #     return np.exp(-0.25*k2/alpha)*rho1*rho2*rho3*dLancsozFT(kx,ky,kz,kcut)
 
             x = np.linspace(0,L[0],N)
             X,Y,Z = np.meshgrid(x,x,x)

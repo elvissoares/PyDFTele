@@ -11,7 +11,6 @@ import numpy as np
 
 
 " Global variables for the FIRE algorithm"
-alpha0 = 0.25
 Ndelay = 20
 Nmax = 10000
 finc = 1.1
@@ -19,7 +18,7 @@ fdec = 0.5
 fa = 0.99
 Nnegmax = 2000
 
-def optimize_fire(x0,f,df,params,atol=1e-4,dt = 0.002,logoutput=False):
+def optimize_fire(x0,f,df,params,alpha0=0.02,atol=1e-4,dt = 0.002,logoutput=False):
     error = 10*atol 
     dtmax = 10*dt
     dtmin = 0.02*dt
@@ -59,9 +58,9 @@ def optimize_fire(x0,f,df,params,atol=1e-4,dt = 0.002,logoutput=False):
     del V, F  
     return [x,f(x,params),i]
 
-def optimize_fire2(x0,f,df,params,atol=1e-4,dt=0.002,logoutput=False):
+def optimize_fire2(x0,f,df,params,alpha0=0.02,atol=1e-4,dt=0.002,logoutput=False):
     error = 10*atol 
-    dtmax = 10*dt
+    dtmax = 14*dt
     dtmin = 0.02*dt
     alpha = alpha0
     Npos = 0
@@ -89,7 +88,7 @@ def optimize_fire2(x0,f,df,params,atol=1e-4,dt=0.002,logoutput=False):
                 dt = max(dt*fdec,dtmin)
                 alpha = alpha0
             x = x - 0.5*dt*V
-            V = np.zeros(x.shape)
+            V = np.zeros_like(x)
             
         V = V + 0.5*dt*F
         V = (1-alpha)*V + alpha*F*np.linalg.norm(V)/np.linalg.norm(F)
