@@ -18,9 +18,9 @@ fdec = 0.5
 fa = 0.99
 Nnegmax = 2000
 
-def optimize_fire(x0,f,df,params,alpha0=0.02,atol=1e-4,dt = 0.002,logoutput=False):
+def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=False):
     error = 10*atol 
-    dtmax = 10*dt
+    dtmax = 14*dt
     dtmin = 0.02*dt
     alpha = alpha0
     Npos = 0
@@ -58,7 +58,7 @@ def optimize_fire(x0,f,df,params,alpha0=0.02,atol=1e-4,dt = 0.002,logoutput=Fals
     del V, F  
     return [x,f(x,params),i]
 
-def optimize_fire2(x0,f,df,params,alpha0=0.02,atol=1e-4,dt=0.002,logoutput=False):
+def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-4,dt=0.002,logoutput=False):
     error = 10*atol 
     dtmax = 14*dt
     dtmin = 0.02*dt

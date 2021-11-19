@@ -14,6 +14,8 @@ from scipy.ndimage import convolve1d
 from scipy import optimize
 import matplotlib.pyplot as plt
 
+alpha = 0.13
+
 def phicorr1D(x,b,a):
     ba = b/a
     conds = [(np.abs(x)<=a), (np.abs(x)>a)]
@@ -499,7 +501,7 @@ if __name__ == "__main__":
         muMSA = ele.muMSA(rhob)
 
         var = np.log(n)
-        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,atol=1.0e-5,dt=0.02,logoutput=True)
+        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,alpha0=alpha,atol=1.0e-5,dt=0.02,logoutput=True)
         n[0,:] = np.exp(varsol[0])
         n[1,:] = np.exp(varsol[1])
 
@@ -592,7 +594,7 @@ if __name__ == "__main__":
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
 
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,1.0e-6,0.02,False)
+            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-6,dt=0.02,logoutput=False)
             psi[:] = varsol2-varsol2[-1]
 
             c1hs = fmt.c1(nn)
@@ -603,7 +605,7 @@ if __name__ == "__main__":
             return aux
 
         var = np.log(n)
-        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,atol=1.0e-5,dt=0.02,logoutput=True)
+        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,alpha0=alpha,atol=1.0e-5,dt=0.02,logoutput=True)
         n[0,:] = np.exp(varsol[0])
         n[1,:] = np.exp(varsol[1])
 
@@ -704,7 +706,7 @@ if __name__ == "__main__":
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
 
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,1.0e-6,0.02,False)
+            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-6,dt=0.02,logoutput=False)
             psi[:] = varsol2-varsol2[-1]
 
             c1hs = fmt.c1(nn)
@@ -715,7 +717,7 @@ if __name__ == "__main__":
             return aux
 
         var = np.log(n)
-        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,atol=1.0e-5,dt=0.02,logoutput=True)
+        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,alpha0=alpha,atol=1.0e-5,dt=0.02,logoutput=True)
         n[0,:] = np.exp(varsol[0])
         n[1,:] = np.exp(varsol[1])
 

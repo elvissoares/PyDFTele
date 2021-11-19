@@ -217,16 +217,16 @@ if __name__ == "__main__":
         plt.show()
         
     if test1: 
-        d = np.array([0.3,0.15])
+        d = np.array([0.3,0.3])
         delta = 0.02*d[1]
-        L = 4.0 + max(d)
+        L = 2.0 + max(d)
         N = int(L/delta)
-        Z = np.array([-1,2])
-        nu = np.array([2,1])
+        Z = np.array([-1,1])
+        nu = np.array([1,1])
 
-        alpha = 0.08
+        alpha = 0.62
 
-        c = 0.1 #mol/L (equivalent to ionic strength for 1:1)
+        c = 1.0 #mol/L (equivalent to ionic strength for 1:1)
         rhob = np.array([nu[0]*c,nu[1]*c])*6.022e23/1.0e24 # particles/nm^3
 
         x = np.linspace(0,L,N)
@@ -316,11 +316,7 @@ if __name__ == "__main__":
 
             c1hs = fmt.c1(nn)
             c1ele = ele.c1(nn,psi)
-            aux = nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
-            # print(aux[:,-1])
-            # aux[0,-nsig[0]:] = 0.0
-            # aux[1,-nsig[1]:] = 0.0
-            return aux
+            return nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
 
         
         var = np.log(n)
@@ -334,7 +330,7 @@ if __name__ == "__main__":
         print('alpha=',alpha)
         print('Niter=',Niter)
 
-        np.save('DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=2-rho+=0.1M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
+        np.save('DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
 
     ##################################################################################
     if test2: 
