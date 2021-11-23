@@ -14,7 +14,7 @@ from scipy.ndimage import convolve1d
 " The PB model for electrolyte solutions using the generalized grand potential"
 
 class PBplanar():
-    def __init__(self,N,delta,species=2,d=np.array([1.0,1.0]),Z=np.array([-1,1])):
+    def __init__(self,N,delta,species=2,lB=0.714,d=np.array([1.0,1.0]),Z=np.array([-1,1])):
         self.N = N
         self.delta = delta
         self.L = delta*N
@@ -23,7 +23,7 @@ class PBplanar():
         self.Z = Z
         self.nhalf = int(0.5*self.L/self.delta)
 
-        self.lB = 0.714 # in nm (for water)
+        self.lB = lB # in nm (for water)
     
     def Debye_constant(self,rhob):
         return np.sqrt(4*np.pi*self.lB*np.sum(self.Z**2*rhob))
