@@ -481,22 +481,19 @@ if __name__ == "__main__":
             nn[1,:] = np.exp(var[1])
             Fid = np.sum(nn*(var-1.0))*delta
             Fhs = np.sum(fmt.Phi(nn))*delta
-            Fele = ele.Flong(psi) + ele.Fint(n,psi) + ele.Fcorr(n)
+            Fele = ele.free_energy(nn,psi)
             return (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*nn*delta)-sigma*psi[0])/L
 
         def dOmegadnR(var,psi):
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
 
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,atol=1.0e-8,dt=0.02,logoutput=False)
+            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,atol=1.0e-8,dt=0.005,logoutput=False)
             psi[:] = varsol2-varsol2[-1]
 
             c1hs = fmt.c1(nn)
             c1ele = ele.c1(nn,psi)
-            aux = nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
-            # aux[0,-nsig[0]:] = 0.0
-            # aux[1,-nsig[1]:] = 0.0
-            return aux
+            return nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
 
         muMSA = ele.muMSA(rhob)
 

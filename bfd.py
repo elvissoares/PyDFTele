@@ -174,10 +174,7 @@ class ElectrolyteBFDPlanar():
         return lappsi + f
 
     def muMSA(self,rhob):
-        muu = np.zeros_like(rhob)
-        for i in range(self.species):
-            muu[i] = -self.lB*(self.Z[i]**2*self.Gammabulk+2*self.d[i]*self.Etabulk*self.Z[i]-self.Etabulk**2*self.d[i]**3*(2.0/3.0-self.Gammabulk*self.d[i]/3.0))/(1+self.Gammabulk*self.d[i])
-        return muu
+        return -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
 
     def mu(self,rhob):
         return self.muMSA(rhob)
@@ -219,14 +216,14 @@ if __name__ == "__main__":
     if test1: 
         d = np.array([0.3,0.3])
         delta = 0.02*d[1]
-        L = 2.0 + max(d)
+        L = 6.0 + max(d)
         N = int(L/delta)
-        Z = np.array([-1,1])
-        nu = np.array([1,1])
+        Z = np.array([-1,2])
+        nu = np.array([2,1])
 
         alpha = 0.62
 
-        c = 1.0 #mol/L (equivalent to ionic strength for 1:1)
+        c = 0.01 #mol/L (equivalent to ionic strength for 1:1)
         rhob = np.array([nu[0]*c,nu[1]*c])*6.022e23/1.0e24 # particles/nm^3
 
         x = np.linspace(0,L,N)
@@ -265,7 +262,7 @@ if __name__ == "__main__":
         psi[:nsig[0]] = psi0*(1/kD+0.5*d[0]-x[:nsig[0]])
         psi[nsig[0]:] = psi0*np.exp(-kD*(x[nsig[0]:]-0.5*d[0]))/kD
     
-        [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,alpha0=alpha,atol=1.0e-8,dt=0.02,logoutput=False)
+        [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,alpha0=alpha,atol=1.0e-8,dt=0.005,logoutput=False)
 
         psi[:] = varsol-varsol[-1]
 
@@ -304,14 +301,14 @@ if __name__ == "__main__":
             nn[1,:] = np.exp(var[1])
             Fid = np.sum(nn*(var-1.0))*delta
             Fhs = np.sum(fmt.Phi(nn))*delta
-            Fele = ele.free_energy(n,psi)
+            Fele = ele.free_energy(nn,psi)
             return (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*nn*delta)-sigma*psi[0])/L
 
         def dOmegadnR(var,psi):
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
 
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-8,dt=0.02,logoutput=False)
+            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-8,dt=0.005,logoutput=False)
             psi[:] = varsol2-varsol2[-1]
 
             c1hs = fmt.c1(nn)
@@ -330,7 +327,7 @@ if __name__ == "__main__":
         print('alpha=',alpha)
         print('Niter=',Niter)
 
-        np.save('DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
+        np.save('DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
 
     ##################################################################################
     if test2: 

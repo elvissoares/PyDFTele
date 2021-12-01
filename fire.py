@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 # Author: Elvis do A. Soares
 # Github: @elvissoares
 # Date: 2020-06-03
@@ -53,7 +54,7 @@ def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=Fals
         error = max(np.abs(F.min()),F.max())
         if error < atol: break
 
-        if logoutput: print(f(x,params),error)
+        if logoutput: print(i,f(x,params),error)
 
     del V, F  
     return [x,f(x,params),i]
@@ -99,10 +100,11 @@ def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-4,dt=0.002,logoutput=False
         error = max(np.abs(F.min()),F.max())
         if error < atol: break
 
-        if logoutput: print(f(x,params),error)
+        if logoutput: print(i,f(x,params),error)
 
     del V, F  
     return [x,f(x,params),i]
+
 
 ##### Take a example using Rosenbrock function ######
 if __name__ == "__main__":

@@ -161,9 +161,9 @@ ax[0].scatter(df['z(nm)'],df['rho-(M)']/c[0],marker='o',edgecolors='C0',facecolo
 ax[0].plot(xPB,naniPB/rhob[0],':',color='grey')
 ax[0].plot(xPB,ncatPB/rhob[1],':',color='grey')
 
-# [x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
-# ax[0].plot(x,nani/rhob[0],'k--')
-# ax[0].plot(x,ncat/rhob[1],'k--')
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
+ax[0].plot(x,nani/rhob[0],'k--')
+ax[0].plot(x,ncat/rhob[1],'k--')
 
 [x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
 ax[0].plot(x,nani/rhob[0],'k')
@@ -183,8 +183,8 @@ ax[1].scatter(df['z(nm)'],df['Psi(kT/e)'],marker='o',edgecolors='grey',facecolor
 
 ax[1].plot(xPB,psiPB,':',color='grey')
 
-# [x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
-# ax[1].plot(x,psi,'k--')
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
+ax[1].plot(x,psi,'k--')
 
 [x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
 ax[1].plot(x,psi,'k')
@@ -199,9 +199,9 @@ custom_lines = [mlines.Line2D([0], [0],ls=':',color='grey', lw=2),mlines.Line2D(
 ax[1].legend(custom_lines, ["PB","BFD","fMSA"],loc='upper center',ncol=3)
 ax[1].tick_params(labelbottom=False)  
 
-# [x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
-# ax[2].plot(x,c1MSAcat,'C3--')
-# ax[2].plot(x,c1MSAani,'C0--')
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
+ax[2].plot(x,c1MSAcat,'C3--')
+ax[2].plot(x,c1MSAani,'C0--')
 
 [x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig3-Z+=1-rho+=1.0M.npy')
 ax[2].plot(x,c1MSAcat+c1nonMSAcat,'C3')
@@ -640,9 +640,9 @@ ax[0].scatter(df['z(nm)'],df['rho-(M)']/c[0],marker='o',edgecolors='C0',facecolo
 ax[0].plot(xPB,naniPB/rhob[0],':',color='grey')
 ax[0].plot(xPB,ncatPB/rhob[1],':',color='grey')
 
-# [x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
-# ax[0].plot(x,nani/rhob[0],'k--')
-# ax[0].plot(x,ncat/rhob[1],'k--')
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
+ax[0].plot(x,nani/rhob[0],'k--')
+ax[0].plot(x,ncat/rhob[1],'k--')
 
 [x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
 ax[0].plot(x,nani/rhob[0],'k')
@@ -660,6 +660,11 @@ ax[0].tick_params(labelbottom=False)
 ax[1].scatter(df['z(nm)'],df['Psi(kT/e)'],marker='o',edgecolors='grey',facecolors='none',linewidth=widthcircle,label='MC')
 
 ax[1].plot(xPB,psiPB,':',color='grey')
+
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
+ax[1].plot(x,psi,'k--')
+
+[x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
 ax[1].plot(x,psi,'k')
 
 ax[1].set_ylabel(r'$\beta e \psi(z)$')
@@ -672,7 +677,12 @@ custom_lines = [mlines.Line2D([0], [0],ls=':',color='grey', lw=2),mlines.Line2D(
 ax[1].legend(custom_lines, ["PB","BFD","fMSA"],loc='upper center',ncol=3)
 ax[1].tick_params(labelbottom=False)  
 
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
+ax[2].plot(x,c1MSAcat,'C3--')
+ax[2].plot(x,c1MSAani,'C0--')
 
+
+[x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=1-rho+=1.0M.npy')
 ax[2].plot(x,c1MSAcat+c1nonMSAcat,'C3')
 ax[2].plot(x,c1MSAani+c1nonMSAani,'C0')
 
@@ -711,6 +721,10 @@ ax[0].scatter(df['z(nm)'],df['rho-(M)']/c[0],marker='o',edgecolors='C0',facecolo
 ax[0].plot(xPB,naniPB/rhob[0],':',color='grey')
 ax[0].plot(xPB,ncatPB/rhob[1],':',color='grey')
 
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
+ax[0].plot(x,nani/rhob[0],'k--')
+ax[0].plot(x,ncat/rhob[1],'k--')
+
 [x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
 ax[0].plot(x,nani/rhob[0],'k')
 ax[0].plot(x,ncat/rhob[1],'k')
@@ -728,10 +742,14 @@ ax[1].scatter(df['z(nm)'],df['Psi(kT/e)'],marker='o',edgecolors='grey',facecolor
 
 ax[1].plot(xPB,psiPB,':',color='grey')
 
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
+ax[1].plot(x,psi,'k--')
+
+[x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
 ax[1].plot(x,psi,'k')
 
 ax[1].set_ylabel(r'$\beta e \psi(z)$')
-ax[1].set_ylim(-6,1)
+ax[1].set_ylim(-6,2)
 ax[1].text(4,-4.0,'$c_+ = 0.01$ M', ha='center', va='center')
 ax[1].text(4,-3,'$Z_+ = 2$ and $a_+ = 0.3$ nm', ha='center', va='center')
 ax[1].text(4,-5,'$\sigma = -0.5$ C/m$^2$', ha='center', va='center')
@@ -740,6 +758,11 @@ custom_lines = [mlines.Line2D([0], [0],ls=':',color='grey', lw=2),mlines.Line2D(
 ax[1].legend(custom_lines, ["PB","BFD","fMSA"],loc='upper center',ncol=3)
 ax[1].tick_params(labelbottom=False)  
 
+[x,nani,ncat,psi,c1MSAani,c1MSAcat] = np.load('../DFTresults/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
+ax[2].plot(x,c1MSAcat,'C3--')
+ax[2].plot(x,c1MSAani,'C0--')
+
+[x,nani,ncat,psi,c1MSAani,c1MSAcat,c1nonMSAani,c1nonMSAcat] = np.load('../DFTresults/profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=2-rho+=0.01M.npy')
 ax[2].plot(x,c1MSAcat+c1nonMSAcat,'C3')
 ax[2].plot(x,c1MSAani+c1nonMSAani,'C0')
 
