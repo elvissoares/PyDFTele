@@ -14,12 +14,11 @@ from scipy.optimize import minimize
 " Global variables for the Anderson algorithm"
 Nmax = 10000
 
-def optimize_anderson(x0,xmodel,f,df,params,atol=1e-4,logoutput=False):
-    m = 10
+def optimize_anderson(x0,xmodel,f,df,params,beta=0.25,atol=1e-7,logoutput=False):
+    m = 3
     alpha0 = (1.0/m)*np.ones(m)
     alpha = alpha0.copy()
     Niter = 0
-    beta = 0.02
 
     x = x0.copy()
 
@@ -31,7 +30,7 @@ def optimize_anderson(x0,xmodel,f,df,params,atol=1e-4,logoutput=False):
 
     while Niter < Nmax:
 
-        F = -df(x,params)
+        F = df(x,params)
         u = xmodel(x,params)
         
         if Niter < m:
@@ -50,7 +49,7 @@ def optimize_anderson(x0,xmodel,f,df,params,atol=1e-4,logoutput=False):
                 fobj = 0.0
                 for l in range(m):
                     fobj += (alp[l]**2)*Fstr[l]
-                return np.linalg.norm(fobj/np.sum(alp**2))
+                return np.linalg.norm(fobj)/np.linalg.norm(alp)
 
             res = minimize(objective, np.sqrt(alpha), method='Nelder-Mead', tol=1e-6)
             alpha[:] = res.x**2
@@ -60,13 +59,12 @@ def optimize_anderson(x0,xmodel,f,df,params,atol=1e-4,logoutput=False):
             for l in range(m):
                 x += (1-beta)*alpha[l]*xstr[l] + beta*alpha[l]*ustr[l]
 
-        fnew = f(x,params)
-        error = np.abs(fnew-flast)
-        flast = fnew
-        if error < atol: break
-
-        if logoutput: print(Niter,fnew,error)
-
+            fnew = f(x,params)
+            error = np.abs(fnew-flast)
+            flast = fnew
+            
+            if logoutput: print(Niter,fnew,error)
+            if error < atol: break
         Niter += 1
 
     del F, xstr, Fstr 

@@ -19,9 +19,9 @@ fdec = 0.5
 fa = 0.99
 Nnegmax = 2000
 
-def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=False):
+def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-6,dt=40.0,logoutput=False):
     error = 10*atol 
-    dtmax = 14*dt
+    dtmax = 10*dt
     dtmin = 0.02*dt
     alpha = alpha0
     Npos = 0
@@ -29,6 +29,8 @@ def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=Fals
     x = x0.copy()
     V = np.zeros(x.shape)
     F = -df(x,params)
+
+    flast = f(x,params)
 
     for i in range(Nmax):
 
@@ -51,7 +53,10 @@ def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=Fals
         F = -df(x,params)
         V = V + 0.5*dt*F
 
-        error = max(np.abs(F.min()),F.max())
+        fnow = f(x,params)
+        # error = max(np.abs(F.min()),F.max())
+        error = np.abs(fnow-flast)
+        flast = fnow
         if error < atol: break
 
         if logoutput: print(i,f(x,params),error)
@@ -59,10 +64,10 @@ def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-4,dt = 0.002,logoutput=Fals
     del V, F  
     return [x,f(x,params),i]
 
-def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-4,dt=0.002,logoutput=False):
+def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-6,dt=40.0,logoutput=False):
     error = 10*atol 
-    dtmax = 14*dt
-    dtmin = 0.02*dt
+    dtmax = 2*dt
+    dtmin = 0.002*dt
     alpha = alpha0
     Npos = 0
     Nneg = 0
@@ -70,6 +75,8 @@ def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-4,dt=0.002,logoutput=False
     x = x0.copy()
     V = np.zeros_like(x)
     F = -df(x,params)
+
+    flast = f(x,params)
 
     for i in range(Nmax):
 
@@ -97,7 +104,10 @@ def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-4,dt=0.002,logoutput=False
         F = -df(x,params)
         V = V + 0.5*dt*F
 
+        # fnow = f(x,params)
         error = max(np.abs(F.min()),F.max())
+        # error = np.abs(fnow-flast)
+        # flast = fnow
         if error < atol: break
 
         if logoutput: print(i,f(x,params),error)

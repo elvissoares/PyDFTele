@@ -175,23 +175,15 @@ class ElectrolytefMSA():
         for i in range(self.species):
             dPhieledn = -self.lB*(self.Z[i]**2*self.Gamma+2*self.d[i]*self.Eta*self.Z[i]-self.Eta**2*self.d[i]**3*(2.0/3.0-self.Gamma*self.d[i]/3.0))/(1+self.Gamma*self.d[i])
             cc[i,:] = -convolve1d(dPhieledn, weights=self.w[i], mode='nearest')*self.delta
-        return cc
-
-    def c1nonMSA(self,rho):
-        cc = np.zeros((self.species,self.N))
-        for i in range(self.species):
             for j in range(self.species):
                 cc[i,:] += -convolve1d(rho[j,:], weights=self.phi[i,j], mode='nearest')*self.delta
         return cc
 
     def c1long(self,psi):
-        cc = np.empty((self.species,self.N))
-        for i in range(self.species):
-            cc[i,:] = -self.Z[i]*psi[:] 
-        return cc
+        return -self.Z[:,np.newaxis]*psi[:]
 
     def c1(self,rho,psi):
-        return self.c1MSA(rho)+self.c1nonMSA(rho)+self.c1long(psi)
+        return self.c1MSA(rho)+self.c1long(psi)
 
     def dOmegadpsi(self,rho,psi,d):
         lappsi = (1/(4*np.pi*self.lB))*convolve1d(psi, weights=[1,-2,1], mode='nearest')/self.delta**2
@@ -230,7 +222,6 @@ class ElectrolytefMSAmodified():
         self.x = np.linspace(0,self.L,N)
 
         self.lB = lB # in nm (for water)
-        print('lB=',self.lB,' nm')
         
         self.n = np.zeros((self.species,N),dtype=np.float32)
         nphi = int((2*max(self.d))/self.delta+1)
@@ -320,23 +311,15 @@ class ElectrolytefMSAmodified():
         for i in range(self.species):
             dPhieledn = -self.lB*(self.Z[i]**2*self.Gamma+2*self.d[i]*self.Eta*self.Z[i]-self.Eta**2*self.d[i]**3*(2.0/3.0-self.Gamma*self.d[i]/3.0))/(1+self.Gamma*self.d[i])
             cc[i,:] = -convolve1d(dPhieledn, weights=self.w[i], mode='nearest')*self.delta
-        return cc
-
-    def c1nonMSA(self,rho):
-        cc = np.zeros((self.species,self.N))
-        for i in range(self.species):
             for j in range(self.species):
                 cc[i,:] += -convolve1d((rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
         return cc
-
+    
     def c1long(self,psi):
-        cc = np.empty((self.species,self.N))
-        for i in range(self.species):
-            cc[i,:] = -self.Z[i]*psi[:] 
-        return cc
+        return -self.Z[:,np.newaxis]*psi[:]
 
     def c1(self,rho,psi):
-        return self.c1MSA(rho)+self.c1nonMSA(rho)+self.c1long(psi)
+        return self.c1MSA(rho)+self.c1long(psi)
 
     def dOmegadpsi(self,rho,psi,sigma):
         lappsi = (1/(4*np.pi*self.lB))*convolve1d(psi, weights=[1,-2,1], mode='nearest')/self.delta**2
@@ -355,24 +338,23 @@ class ElectrolytefMSAmodified():
         return lappsi + f
 
     def muMSA(self,rhob):
-        muu = np.zeros_like(rhob)
-        for i in range(self.species):
-            muu[i] = -self.lB*(self.Z[i]**2*self.Gammabulk+2*self.d[i]*self.Etabulk*self.Z[i]-self.Etabulk**2*self.d[i]**3*(2.0/3.0-self.Gammabulk*self.d[i]/3.0))/(1+self.Gammabulk*self.d[i])
-        return muu
+        return -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
 
     def mu(self,rhob):
         return self.muMSA(rhob)
 
 if __name__ == "__main__":
     test0 = False # the MSA screening parameter 
-    test1 = True # Voukadinova
-    test2 = False # RFD
+    test1 = False # Voukadinova
+    test2 = True # using Poisson1D
     test3 = False # fMSA
 
     import matplotlib.pyplot as plt
     from fire import optimize_fire2
-    from fmt import FMTplanar
+    from andersonacc import optimize_anderson
+    from fmt1d import FMTplanar
     from pb import PBplanar
+    from poisson1d import Poisson1D
 
     if test0: 
         c = np.linspace(1e-3,1.0,1000)
@@ -508,224 +490,134 @@ if __name__ == "__main__":
 
     ##################################################################################
     if test2: 
-        d = np.array([0.425,0.425])
-        delta = 0.025*d[1]
-        L = 10.5*d[0]
+        d = np.array([0.3,0.3])
+        delta = 0.01*d[1]
+        L = 2.5
         N = int(L/delta)
-        Z = np.array([-1,2])
+        Z = np.array([-1,3])
 
-        c = 0.5 #mol/L (equivalent to ionic strength for 1:1)
+        c = 1.0 #mol/L (equivalent to ionic strength for 1:1)
         rhob = np.array([-(Z[1]/Z[0])*c,c])*6.022e23/1.0e24 # particles/nm^3
 
         x = np.linspace(0,L,N)
 
-        sigma = -0.1704/d[0]**2
-        # sigma = -3.12
-
-        n = np.ones((2,N),dtype=np.float32)
-        nsig = np.array([int(0.5*d[0]/delta),int(0.5*d[1]/delta)])
-
-        param = np.array([rhob[0],rhob[1],sigma])
-
-        # Here we will solve the PB equation as a input to DFT
-        pb = PBplanar(N,delta,species=2,d=d,Z=Z)
-        kD = np.sqrt(4*np.pi*pb.lB*np.sum(Z**2*rhob))
-
-        def Fpsi(psi,param):
-            n[0,:nsig[0]] = 1.0e-16
-            n[1,:nsig[1]] = 1.0e-16
-            n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-            n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
-            sigma = param[2]
-            Fele = pb.free_energy(n,psi)
-            return (Fele+sigma*psi[0])/L
-
-        def dFpsidpsi(psi,param):
-            n[0,:nsig[0]] = 1.0e-16
-            n[1,:nsig[1]] = 1.0e-16
-            n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-            n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
-            sigma = param[2]
-            return -pb.dOmegadpsi(n,psi,sigma)*delta/L
-
-        psi0 = 0.1*sigma*4*np.pi*pb.lB # attenuation of the surface charge
-        psi = np.zeros(N,dtype=np.float32)
-        psi[:nsig[0]] = psi0*(1/kD+0.5*d[0]-x[:nsig[0]])
-        psi[nsig[0]:] = psi0*np.exp(-kD*(x[nsig[0]:]-0.5*d[0]))/kD
-    
-        [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,1.0e-8,0.05,False)
-
-        psi[:] = varsol
-
-        n[0,:nsig[0]] = 1.0e-16
-        n[1,:nsig[1]] = 1.0e-16
-        n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-        n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
-
-        # Now we will solve the DFT with electrostatic correlations
-        nn = n.copy()
-
-        fmt = FMTplanar(N,delta,species=2,d=d)
-        ele = ElectrolytefMSAmodified(N,delta,species=2,d=d,Z=Z,rhob=rhob)
-
-        # solving the electrostatic potential equation
-        def Fpsi2(psi,nn):
-            Fele = ele.Flong(nn,psi)+ele.Fint(nn,psi)
-            return (Fele+sigma*psi[0])/L
-
-        def dFpsidpsi2(psi,nn):
-            return -ele.dOmegadpsi(nn,psi,[sigma,0.0])*delta/L
-
-        mu = np.log(rhob) + fmt.mu(rhob) + ele.mu(rhob)
-
-        # Now we will solve the DFT equations
-        def Omega(var,psi):
-            nn[0,:] = np.exp(var[0])
-            nn[1,:] = np.exp(var[1])
-            Fid = np.sum(nn*(var-1.0))*delta
-            Fhs = np.sum(fmt.Phi(nn))*delta
-            Fele = ele.Fint(n,psi) + ele.Fcorr(n)
-            return (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*nn*delta)+sigma*psi[0])/L
-
-        def dOmegadnR(var,psi):
-            nn[0,:] = np.exp(var[0])
-            nn[1,:] = np.exp(var[1])
-
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-6,dt=0.02,logoutput=False)
-            psi[:] = varsol2-varsol2[-1]
-
-            c1hs = fmt.c1(nn)
-            c1ele = ele.c1(nn,psi)
-            aux = nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
-            # aux[0,-nsig[0]:] = 0.0
-            # aux[1,-nsig[1]:] = 0.0
-            return aux
-
-        var = np.log(n)
-        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,alpha0=alpha,atol=1.0e-5,dt=0.02,logoutput=True)
-        n[0,:] = np.exp(varsol[0])
-        n[1,:] = np.exp(varsol[1])
-
-        muMSA = ele.muMSA(rhob)
-        print('muMSA =',muMSA)
-
-        c1MSA = ele.c1MSA(n)+ele.c1nonMSA(n)+muMSA[:,np.newaxis]
-        # print(c1MSA)
-
-        np.save('profiles-DFTRFD-electrolyte21-c0.5-d-0.1704.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
-        # np.save('profiles-DFTcorr-Voukadinova2018-electrolyte-Fig5-Z+=3-rho+=1.0M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1],c1nonMSA[0],c1nonMSA[1]])
-
-    if test3: 
-        d = np.array([0.466,0.362])
-        delta = 0.025*d[1]
-        L = 10.5*d[0]
-        N = int(L/delta)
-        Z = np.array([-1,1])
-
-        c = 1.0 #mol/L (equivalent to ionic strength for 1:1)
-        rhob = np.array([c,c])*6.022e23/1.0e24 # particles/nm^3
-
-        x = np.linspace(0,L,N)
-
         # sigma = -0.1704/d[0]**2
-        sigma = 0.1/0.16
+        sigma = -3.125
+        bound_value = np.array([sigma,0.0])
 
         n = np.ones((2,N),dtype=np.float32)
-        Vext = np.zeros((2,N),dtype=np.float32)
-        nsig = np.array([int(0.5*d[0]/delta),int(0.5*d[1]/delta)])
+        nsig = np.array([int(0.5*d[0]/delta),int(0.5*d[1]/delta)])      
 
-        param = np.array([rhob[0],rhob[1],sigma])
-
+        lB = 0.714
         # Here we will solve the PB equation as a input to DFT
-        pb = PBplanar(N,delta,species=2,d=d,Z=Z)
-        kD = np.sqrt(4*np.pi*pb.lB*np.sum(Z**2*rhob))
+        kD = np.sqrt(4*np.pi*lB*np.sum(Z**2*rhob))
 
-        def Fpsi(psi,param):
-            n[0,:nsig[0]] = 1.0e-16
-            n[1,:nsig[1]] = 1.0e-16
-            n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-            n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
-            sigma = param[2]
-            Fele = pb.free_energy(n,psi)
-            return (Fele+sigma*psi[0])/L
-
-        def dFpsidpsi(psi,param):
-            n[0,:nsig[0]] = 1.0e-16
-            n[1,:nsig[1]] = 1.0e-16
-            n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-            n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
-            sigma = param[2]
-            return -pb.dOmegadpsi(n,psi,sigma)*delta/L
-
-        psi0 = 0.1*sigma*4*np.pi*pb.lB # attenuation of the surface charge
+        psi0 = sigma*4*np.pi*lB/kD # attenuation of the surface charge
         psi = np.zeros(N,dtype=np.float32)
-        psi[:nsig[0]] = psi0*(1/kD+0.5*d[0]-x[:nsig[0]])
-        psi[nsig[0]:] = psi0*np.exp(-kD*(x[nsig[0]:]-0.5*d[0]))/kD
-    
-        # [varsol,Omegasol,Niter] = optimize_fire2(psi,Fpsi,dFpsidpsi,param,1.0e-8,0.05,False)
-
-        # psi[:] = varsol
+        psi[:] = psi0*np.exp(-kD*x)
 
         n[0,:nsig[0]] = 1.0e-16
         n[1,:nsig[1]] = 1.0e-16
-        n[0,nsig[0]:] = param[0]*np.exp(-Z[0]*psi[nsig[0]:])
-        n[1,nsig[1]:] = param[1]*np.exp(-Z[1]*psi[nsig[1]:])
+        n[0,nsig[0]:] = rhob[0]*np.exp(-Z[0]*psi[nsig[0]:])
+        n[1,nsig[1]:] = rhob[1]*np.exp(-Z[1]*psi[nsig[1]:])
+        # n[0,nsig[0]:] = param[0]
+        # n[1,nsig[1]:] = param[1]
 
         # Now we will solve the DFT with electrostatic correlations
         nn = n.copy()
 
+        poisson = Poisson1D(N,delta,boundary_condition='mixed')
         fmt = FMTplanar(N,delta,species=2,d=d)
-        ele = ElectrolytefMSA(N,delta,species=2,d=d,Z=Z,rhob=rhob)
-
-        # solving the electrostatic potential equation
-        def Fpsi2(psi,nn):
-            Fele = ele.Flong(nn,psi)+ele.Fint(nn,psi)
-            return (Fele+sigma*psi[0])/L
-
-        def dFpsidpsi2(psi,nn):
-            return -ele.dOmegadpsi(nn,psi,[sigma,0.0])*delta/L
+        ele = ElectrolytefMSAmodified(N,delta,species=2,d=d,Z=Z,rhob=rhob,model='symmetrical')
 
         mu = np.log(rhob) + fmt.mu(rhob) + ele.mu(rhob)
-        # Vext[0,nsig[0]:] = -0.142573/x[nsig[0]:]**3 # SO4
-        # Vext[0,nsig[0]:] = -0.0107915/x[nsig[0]:]**3 # I
-        # Vext[1,nsig[1]:] = -0.00109374/x[nsig[1]:]**3 # Na
+
+        param = np.array([mu,bound_value])
 
         # Now we will solve the DFT equations
-        def Omega(var,psi):
+        def Omega(var,params):
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
             Fid = np.sum(nn*(var-1.0))*delta
             Fhs = np.sum(fmt.Phi(nn))*delta
-            Fele = ele.Fint(n,psi) + ele.Fcorr(n)
-            return (Fid+Fhs+Fele+np.sum((Vext-mu[:,np.newaxis])*nn)*delta+sigma*psi[0])/L
+            mu = params[0]
+            bound_value = params[1]
+            psi[:] = poisson.ElectrostaticPotential(np.sum(nn*Z[:,np.newaxis],axis=0),psi,bound_value)
+            Fele = ele.free_energy(nn,psi)
+            return (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*nn)*delta+sigma*psi[0])/L
 
-        def dOmegadnR(var,psi):
+        def dOmegadnR(var,params):
             nn[0,:] = np.exp(var[0])
             nn[1,:] = np.exp(var[1])
-
-            [varsol2,Omegasol2,Niter] = optimize_fire2(psi,Fpsi2,dFpsidpsi2,nn,alpha0=alpha,atol=1.0e-6,dt=0.02,logoutput=False)
-            psi[:] = varsol2-varsol2[-1]
+            mu = params[0]
+            bound_value = params[1]
+            psi[:] = poisson.ElectrostaticPotential(np.sum(nn*Z[:,np.newaxis],axis=0),psi,bound_value)
 
             c1hs = fmt.c1(nn)
             c1ele = ele.c1(nn,psi)
-            aux = nn*(var -c1hs -c1ele - mu[:,np.newaxis] + Vext)*delta/L
-            aux[0,-nsig[0]:] = 0.0
-            aux[1,-nsig[1]:] = 0.0
-            return aux
+            return nn*(var -c1hs -c1ele - mu[:,np.newaxis])*delta/L
+
+        def Rhomodel(var,params):
+            nn[0,:] = np.exp(var[0])
+            nn[1,:] = np.exp(var[1])
+            mu = params[0]
+            bound_value = params[1]
+            psi[:] = poisson.ElectrostaticPotential(np.sum(nn*Z[:,np.newaxis],axis=0),psi,bound_value)
+
+            c1hs = fmt.c1(nn)
+            c1ele = ele.c1(nn,psi)
+            return (c1hs +c1ele + mu[:,np.newaxis])
+
+        muMSA = ele.muMSA(rhob)
 
         var = np.log(n)
-        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,psi,alpha0=alpha,atol=1.0e-5,dt=0.02,logoutput=True)
+        [varsol,Omegasol1,Niter] = optimize_fire2(var,Omega,dOmegadnR,param,alpha0=0.25,atol=1.0e-4,dt=0.2,logoutput=True)
         n[0,:] = np.exp(varsol[0])
         n[1,:] = np.exp(varsol[1])
 
-        muMSA = ele.muMSA(rhob)
-        munonMSA = ele.munonMSA(rhob)
-        print('muMSA =',muMSA)
-        print('munonMSA =',munonMSA)
+        # var = np.log(n)
+        # [varsol,Omegasol1,Niter] = optimize_anderson(var,Rhomodel,Omega,dOmegadnR,param,beta=0.25,atol=1e-7,logoutput=True)
+        # n[0,:] = np.exp(varsol[0])
+        # n[1,:] = np.exp(varsol[1])
+
+        # alpha = 2.0e-5
+        # k = 0
+        # error = 1.0
+
+        # while error > 1.0e-5:
+        #     k+=1
+
+        #     psi[:] = poisson.ElectrostaticPotential(np.sum(n*Z[:,np.newaxis],axis=0),psi,bound_value)
+
+        #     plt.plot(x,psi)
+        #     plt.show()
+
+        #     c1hs = fmt.c1(n)
+        #     c1ele = ele.c1(n,psi)
+        #     nn[0,:] = np.exp(c1hs[0] +c1ele[0] + mu[0,np.newaxis])
+        #     nn[1,:] = np.exp(c1hs[1] +c1ele[1] + mu[1,np.newaxis])
+        #     nn[0,:nsig[0]] = 1.0e-16
+        #     nn[1,:nsig[1]] = 1.0e-16
+
+        #     plt.plot(x,nn[0])
+        #     plt.plot(x,nn[1])
+        #     plt.show()
+
+        #     n[:] = (1-alpha)*n + alpha*nn
+
+        #     plt.plot(x,n[0])
+        #     plt.plot(x,n[1])
+        #     plt.show()
+
+        #     error = np.max(np.abs(nn-n))
+
+        #     Fid = np.sum(n*(np.log(n)-1.0))*delta
+        #     Fhs = np.sum(fmt.Phi(n))*delta
+        #     Fele = ele.free_energy(n,psi)
+        #     omega = (Fid+Fhs+Fele-np.sum(mu[:,np.newaxis]*n)*delta+sigma*psi[0])/L
+
+        #     print(k,omega,error)
 
         c1MSA = ele.c1MSA(n)+muMSA[:,np.newaxis]
-        # print(c1MSA)
-        c1nonMSA = ele.c1nonMSA(n)+munonMSA[:,np.newaxis]
-        # print(c1nonMSA)
 
-        np.save('profiles-DFTfMSA-Alijo2012-electrolyte-NaI-sigma0.1-nodispersion.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1],c1nonMSA[0],c1nonMSA[1]])
+        np.save('DFTresults/profiles-fMSA-Voukadinova2018-electrolyte-Fig5-Z+=3-rho+=1.0M.npy',[x,n[0],n[1],psi,c1MSA[0],c1MSA[1]])
