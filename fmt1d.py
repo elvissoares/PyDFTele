@@ -97,6 +97,9 @@ class FMTplanar():
 
         return -self.n0*np.log(self.oneminusn3)+(self.phi2/self.oneminusn3)*(self.n1*self.n2-(self.n1vec*self.n2vec)) + (self.phi3/(24*np.pi*self.oneminusn3**2))*(self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))
 
+    def free_energy(self,rho):
+        return np.sum(self.Phi(rho))*self.delta
+
     def c1(self,rho):
         self.weighted_densities(rho)
 
