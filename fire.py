@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+# from numba import njit
 # Author: Elvis do A. Soares
 # Github: @elvissoares
 # Date: 2020-06-03
@@ -64,7 +65,7 @@ def optimize_fire(x0,f,df,params,alpha0=0.62,atol=1e-6,dt=40.0,logoutput=False):
     del V, F  
     return [x,f(x,params),i]
 
-def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-6,dt=40.0,logoutput=False):
+def optimize_fire2(x0,f,df,params,alpha0=0.02,atol=1e-6,dt=0.002,logoutput=False):
     error = 10*atol 
     dtmax = 2*dt
     dtmin = 0.002*dt
@@ -112,7 +113,7 @@ def optimize_fire2(x0,f,df,params,alpha0=0.62,atol=1e-6,dt=40.0,logoutput=False)
 
         if logoutput: print(i,f(x,params),error)
 
-    del V, F  
+    # del V, F  
     return [x,f(x,params),i]
 
 
@@ -131,14 +132,14 @@ if __name__ == "__main__":
     p = [1,100]
     x0 = np.array([3.0,4.0])
 
-    [xmin,fmin,Niter] = optimize_fire(x0,f,gradf,p,atol=1e-6)
+    # [xmin,fmin,Niter] = optimize_fire(x0,f,gradf,p,atol=1e-6)
+
+    # print("xmin = ", xmin)
+    # print("fmin = ", fmin)
+    # print("Iterations = ",Niter)
+
+    xmin = optimize_fire2(x0,f,gradf,p,atol=1e-6)
 
     print("xmin = ", xmin)
-    print("fmin = ", fmin)
-    print("Iterations = ",Niter)
-
-    [xmin,fmin,Niter] = optimize_fire2(x0,f,gradf,p,atol=1e-6)
-
-    print("xmin = ", xmin)
-    print("fmin = ", fmin)
-    print("Iterations = ",Niter)
+    # print("fmin = ", fmin)
+    # print("Iterations = ",Niter)
