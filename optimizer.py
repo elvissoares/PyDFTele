@@ -27,13 +27,13 @@ def Optimize(dft,method='picard',logoutput=False):
     dft.Update_System()
 
     if method == 'picard':
-        alpha0=0.003
-        atol=1.e-4
-        rtol = 1.e-6
-        alpha = alpha0
+        atol=1.e-3
+        rtol = 1.e-5
+        alpha = 0.02
         lnrho = np.log(dft.rho) 
 
         nsig = (0.5*dft.d/dft.delta).astype(int)  
+        errorlast = np.inf
 
         for i in range(Nmax):
             lnrhonew = dft.c1 + dft.mu[:,np.newaxis] - dft.Vext
@@ -48,11 +48,11 @@ def Optimize(dft,method='picard',logoutput=False):
 
             # error = max(abs(F.min()),F.max())
             error = np.linalg.norm(F)
-            # if i > 0:
-            #     if errorlast > error:  alpha = max(0.004,alpha*1.2)
-            #     else: alpha = 1.0e-4
-            if error< 100.0: 
-                alpha = alpha*1.001
+            if errorlast > error:  alpha = min(0.02,alpha*finc)
+            else: alpha = max(1.0e-3,alpha*fdec)
+            # if error< 100.0: 
+            #     alpha = alpha*1.001
+            errorlast = error
             if error < 1.0: break
             if logoutput: print(i,dft.Omega,error)
 

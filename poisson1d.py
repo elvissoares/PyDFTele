@@ -25,24 +25,22 @@ class Poisson1D():
 
         # auxiliary variables for linear system
         self.Ab = np.zeros((3,self.N))
-        self.r = np.zeros(self.N)
+        # self.r = np.zeros(self.N)
 
     def ElectrostaticPotential(self,q,bound_value):
 
-        self.r[:] = -4*np.pi*self.lB*self.delta**2*q  
+        self.r = -4*np.pi*self.lB*self.delta**2*q  
 
-        # psi[:] = tridiag(np.ones(self.N),diag,cdiag, self.r)
         if self.boundary_condition == 'dirichlet':
             # surface potential specified by the user
-            self.r[0] = -bound_value[0]
-            self.r[-1] = -bound_value[1]
+            self.r[0] = bound_value[0]
+            # self.r[-1] = -bound_value[1]
 
             self.Ab[0,1:] = 1.0
             self.Ab[2,:-1] = 1.0
-            self.Ab[0,1] = self.Ab[2,-2] = 0.0
-            self.Ab[1,1:-1] = -2.0
-            self.Ab[1,0] = -1.0
-            self.Ab[1,-1] = -1.0
+            self.Ab[0,1] = 0.0
+            self.Ab[1,:] = -2.0
+            self.Ab[1,0] = 1.0
 
             psi = solve_banded((1,1), self.Ab, self.r)
             # psi[:] = tridiag(self.Ab[2,:],self.Ab[1,:],self.Ab[0,:], self.r)

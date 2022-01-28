@@ -121,8 +121,8 @@ class ElectrolyteDFT():
         self.x = np.linspace(0,self.L,N)
 
         self.rho = np.empty((self.species,self.N),dtype=np.float32)
-        self.c1 = np.empty((self.species,self.N),dtype=np.float32)
-        self.c1exc = np.empty((self.species,self.N),dtype=np.float32)
+        self.c1 = np.zeros((self.species,self.N),dtype=np.float32)
+        self.c1exc = np.zeros((self.species,self.N),dtype=np.float32)
         self.Vext = np.zeros((self.species,self.N),dtype=np.float32)
 
         # defining the FMT terms
@@ -153,9 +153,9 @@ class ElectrolyteDFT():
         
         self.Gamma = np.zeros(N,dtype=np.float32)
         self.Eta = np.zeros(N,dtype=np.float32)
-        self.Psi = np.zeros(N,dtype=np.float32)
+        self.psi = np.zeros(N,dtype=np.float32)
 
-        self.poisson = Poisson1D(self.N,self.delta,boundary_condition='mixed')
+        # self.poisson = Poisson1D(self.N,self.delta,boundary_condition='dirichlet')
         self.Gammabulk = Gammabulkparameter(self.rhob,self.d,self.Z,self.lB)
         self.Etabulk = Etafunc(self.rhob,self.d,self.Z,self.Gammabulk)
         self.b = self.d+1.0/self.Gammabulk
@@ -208,11 +208,19 @@ class ElectrolyteDFT():
         self.Calculate_c1()
         self.Calculate_Omega()
 
+    def Set_InitialCondition(self):
+        nsig = (0.5*self.d/self.delta).astype(int)
+        self.rho[0,:] = self.rhob[0]
+        self.rho[1,:] = self.rhob[1]
+        self.rho[0,:nsig[0]] = 1.0e-16
+        self.rho[1,:nsig[1]] = 1.0e-16
+
     def Set_External_Potential(self,Vext=0.0):
         self.Vext[:] = Vext
 
-    def Set_Boundary_Conditions(self,sigma=0.0,psibulk=0.0):
-        self.bound_value = np.array([sigma,psibulk])
+    def Set_Boundary_Conditions(self,psi0=0.0,sigma=np.array([0.0,0.0])):
+        self.psi0 = psi0
+        if self.psi0 == 0.0: self.sigma = sigma
 
     def Calculate_auxiliary_quantities(self):
         self.n3[:] = convolve1d(self.rho[0], weights=self.w3[0], mode='nearest')*self.delta
@@ -264,11 +272,11 @@ class ElectrolyteDFT():
         aux = -self.n0*np.log(self.oneminusn3)+(self.phi2/self.oneminusn3)*(self.n1*self.n2-(self.n1vec*self.n2vec)) + (self.phi3/(24*np.pi*self.oneminusn3**2))*(self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))
         self.Fhs = np.sum(aux)*self.delta
 
-        aux = convolve1d(self.Psi, weights=[-1,1], mode='nearest')/self.delta
+        aux = convolve1d(self.psi, weights=[-1,1], mode='nearest')/self.delta
         self.Fcoul = -(1/(8*np.pi*self.lB))*np.sum(aux**2)*self.delta
 
         aux = np.sum(self.rho[:,:]*self.Z[:,np.newaxis],axis=0)
-        self.Fcoul += np.sum(aux*self.Psi)*self.delta 
+        self.Fcoul += np.sum(aux*self.psi)*self.delta 
 
         if self.ecmethod == 'PB':
             self.Fec = 0.0
@@ -293,10 +301,21 @@ class ElectrolyteDFT():
         self.Omega = (self.F + np.sum((self.Vext-self.mu[:,np.newaxis])*self.rho)*self.delta)/self.L
 
     def Calculate_Potential(self):
-        self.Psi[:] = self.poisson.ElectrostaticPotential(np.sum(self.rho*self.Z[:,np.newaxis],axis=0),self.bound_value)
-        # self.Q = np.sum(self.rho*self.Z[:,np.newaxis],axis=0)
-        # self.Psi[:] = 4*np.pi*self.lB*convolve1d(self.Q,weights=self.x, mode='nearest')*self.delta - self.bound_value[-1]
-        # self.Psi[0] = 4*np.pi*self.lB*self.bound_value[0] + self.Psi[1]
+        self.q = np.sum(self.rho*self.Z[:,np.newaxis],axis=0)
+        # self.psi[:] = self.poisson.ElectrostaticPotential(self.q,np.array([self.psi0,0.0]))
+        # self.sigma = -np.sum(self.q)*self.delta
+        if self.psi0 != 0.0: 
+            Q = np.cumsum(self.q[::-1])
+            self.psi[:] = self.psi0 + (4*np.pi*self.lB)*self.x*Q[::-1]*self.delta +(4*np.pi*self.lB)*np.cumsum(self.x*self.q)*self.delta
+            self.sigma = -np.sum(self.q)*self.delta
+        else:
+            Q = np.cumsum(self.q[::-1])
+            self.psi[:] = (4*np.pi*self.lB)*self.x*Q[::-1]*self.delta +(4*np.pi*self.lB)*np.cumsum(self.x*self.q)*self.delta
+            # self.sigma = -np.sum(self.q)*self.delta
+            psi0new = self.psi[1] + (4*np.pi*self.lB)*self.sigma[0]*self.delta
+            self.psi[:] = self.psi + psi0new
+            # Q = np.cumsum(self.x[::-1]*self.q[::-1])
+            # self.psi[:] = -(4*np.pi*self.lB)*self.sigma[0]*self.x - (4*np.pi*self.lB)*Q[::-1]*self.delta -(4*np.pi*self.lB)*self.x*np.cumsum(self.q)*self.delta
 
     def Calculate_c1(self):
         # HS c1
@@ -330,7 +349,7 @@ class ElectrolyteDFT():
                     self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
         
         # Coulomb c1
-        self.c1coul = -self.Z[:,np.newaxis]*self.Psi
+        self.c1coul = -self.Z[:,np.newaxis]*self.psi
 
         self.c1exc = self.c1hs+self.c1ec
         self.c1 = self.c1exc+self.c1coul
@@ -377,14 +396,7 @@ class ElectrolyteDFT():
         self.muexc = self.muhs+self.muec
         self.mu = self.muid + self.muexc
 
-    def Set_InitialCondition(self):
-        nsig = (0.5*self.d/self.delta).astype(int)
-        self.rho[0,:] = self.rhob[0]
-        self.rho[1,:] = self.rhob[1]
-        self.rho[0,:nsig[0]] = 1.0e-16
-        self.rho[1,:nsig[1]] = 1.0e-16
-
-    def Calculate_Equlibrium(self,method='picard',logoutput=False):
+    def Calculate_Equilibrium(self,method='picard',logoutput=False):
         return Optimize(self,method=method,logoutput=logoutput)
 
 
@@ -446,11 +458,11 @@ if __name__ == "__main__":
         plt.plot(ele.x,ele.rho[1]/rhob[1],'C3')
         plt.show()
 
-        plt.plot(ele.x,ele.Psi)
+        plt.plot(ele.x,ele.psi)
         plt.show()
 
-        ele.Calculate_Equlibrium(method='anderson',logoutput=True)
+        ele.Calculate_Equilibrium(method='anderson',logoutput=True)
 
-        np.save('results/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=3-rho+=0.01M.npy',[ele.x,ele.rho[0],ele.rho[1],ele.Psi,ele.c1exc[0]+ele.muexc[0],ele.c1exc[1]+ele.muexc[1]])
+        np.save('results/profiles-BFD-Voukadinova2018-electrolyte-Fig5-Z+=3-rho+=0.01M.npy',[ele.x,ele.rho[0],ele.rho[1],ele.psi,ele.c1exc[0]+ele.muexc[0],ele.c1exc[1]+ele.muexc[1]])
     
     print("time :", timeit.default_timer() - starttime, 'sec')
