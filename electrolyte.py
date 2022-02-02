@@ -159,7 +159,6 @@ class ElectrolyteDFT():
         self.Gammabulk = Gammabulkparameter(self.rhob,self.d,self.Z,self.lB)
         self.Etabulk = Etafunc(self.rhob,self.d,self.Z,self.Gammabulk)
         self.b = self.d+1.0/self.Gammabulk
-        print('b = ',self.b,' nm')
 
         if self.ecmethod == 'fMSA':
             
@@ -203,7 +202,7 @@ class ElectrolyteDFT():
         self.Set_External_Potential()
 
     def Update_System(self):
-        self.Calculate_auxiliary_quantities()
+        if self.ecmethod != 'PB': self.Calculate_auxiliary_quantities()
         self.Calculate_Potential()
         self.Calculate_c1()
         self.Calculate_Omega()
@@ -269,9 +268,6 @@ class ElectrolyteDFT():
     def Calculate_Free_energy(self):
         self.Fid = np.sum(self.rho*(np.log(self.rho)-1.0))*self.delta
 
-        aux = -self.n0*np.log(self.oneminusn3)+(self.phi2/self.oneminusn3)*(self.n1*self.n2-(self.n1vec*self.n2vec)) + (self.phi3/(24*np.pi*self.oneminusn3**2))*(self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))
-        self.Fhs = np.sum(aux)*self.delta
-
         aux = convolve1d(self.psi, weights=[-1,1], mode='nearest')/self.delta
         self.Fcoul = -(1/(8*np.pi*self.lB))*np.sum(aux**2)*self.delta
 
@@ -280,18 +276,22 @@ class ElectrolyteDFT():
 
         if self.ecmethod == 'PB':
             self.Fec = 0.0
-        elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
-            aux = self.Gamma**3/(3*np.pi)
-            for i in range(self.species):
-                aux += -self.lB*self.q0[i,:]*self.Z[i]*(self.Z[i]*self.Gamma+self.Eta*self.d[i])/(1+self.Gamma*self.d[i])
-                for j in range(self.species):
-                    aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
-            self.Fec = np.sum(aux)*self.delta
-        elif self.ecmethod == 'BFD':
-            aux = np.ones_like(self.x)*(self.Gammabulk**3/(3*np.pi) - np.sum(self.lB*self.rhob*self.Z*(self.Z*self.Gammabulk+self.Etabulk*self.d)/(1+self.Gammabulk*self.d)))
-            for i in range(self.species):
-                for j in range(self.species):
-                    aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+            self.Fhs = 0.0
+        else:
+            aux = -self.n0*np.log(self.oneminusn3)+(self.phi2/self.oneminusn3)*(self.n1*self.n2-(self.n1vec*self.n2vec)) + (self.phi3/(24*np.pi*self.oneminusn3**2))*(self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))
+            self.Fhs = np.sum(aux)*self.delta
+
+            if self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
+                aux = self.Gamma**3/(3*np.pi)
+                for i in range(self.species):
+                    aux += -self.lB*self.q0[i,:]*self.Z[i]*(self.Z[i]*self.Gamma+self.Eta*self.d[i])/(1+self.Gamma*self.d[i])
+                    for j in range(self.species):
+                        aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+            elif self.ecmethod == 'BFD':
+                aux = np.ones_like(self.x)*(self.Gammabulk**3/(3*np.pi) - np.sum(self.lB*self.rhob*self.Z*(self.Z*self.Gammabulk+self.Etabulk*self.d)/(1+self.Gammabulk*self.d)))
+                for i in range(self.species):
+                    for j in range(self.species):
+                        aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
             self.Fec = np.sum(aux)*self.delta
 
         self.F = self.Fid+self.Fhs+self.Fec+self.Fcoul
@@ -319,81 +319,87 @@ class ElectrolyteDFT():
 
     def Calculate_c1(self):
         # HS c1
-        dPhidn0 = -np.log(self.oneminusn3 )
-        dPhidn1 = self.n2*self.phi2/self.oneminusn3
-        dPhidn2 = self.n1*self.phi2/self.oneminusn3  + (3*self.n2*self.n2-3*(self.n2vec*self.n2vec))*self.phi3/(24*np.pi*self.oneminusn3**2)
+        if self.ecmethod == 'PB':
+            self.c1exc[:,:] = 0.0
+        else:
+            dPhidn0 = -np.log(self.oneminusn3 )
+            dPhidn1 = self.n2*self.phi2/self.oneminusn3
+            dPhidn2 = self.n1*self.phi2/self.oneminusn3  + (3*self.n2*self.n2-3*(self.n2vec*self.n2vec))*self.phi3/(24*np.pi*self.oneminusn3**2)
 
-        dPhidn3 = self.n0/self.oneminusn3 +(self.n1*self.n2-(self.n1vec*self.n2vec))*(self.dphi2dn3 + self.phi2/self.oneminusn3)/self.oneminusn3 + (self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))*(self.dphi3dn3+2*self.phi3/self.oneminusn3)/(24*np.pi*self.oneminusn3**2)
+            dPhidn3 = self.n0/self.oneminusn3 +(self.n1*self.n2-(self.n1vec*self.n2vec))*(self.dphi2dn3 + self.phi2/self.oneminusn3)/self.oneminusn3 + (self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))*(self.dphi3dn3+2*self.phi3/self.oneminusn3)/(24*np.pi*self.oneminusn3**2)
 
-        dPhidn1vec0 = -self.n2vec*self.phi2/self.oneminusn3 
-        dPhidn2vec0 = -self.n1vec*self.phi2/self.oneminusn3  - self.n2*self.n2vec*self.phi3/(4*np.pi*self.oneminusn3**2)
+            dPhidn1vec0 = -self.n2vec*self.phi2/self.oneminusn3 
+            dPhidn2vec0 = -self.n1vec*self.phi2/self.oneminusn3  - self.n2*self.n2vec*self.phi3/(4*np.pi*self.oneminusn3**2)
 
-        # EC c1
-        for i in range(self.species):
-            self.c1hs[i,:] = -convolve1d(dPhidn2 + dPhidn1/(2*np.pi*self.d[i]) + dPhidn0/(np.pi*self.d[i]**2), weights=self.w2[i], mode='nearest')*self.delta - convolve1d(dPhidn3, weights=self.w3[i], mode='nearest')*self.delta + convolve1d(dPhidn2vec0+dPhidn1vec0/(2*np.pi*self.d[i]), weights=self.w2vec[i], mode='nearest')*self.delta
+            # EC c1
+            for i in range(self.species):
+                self.c1hs[i,:] = -convolve1d(dPhidn2 + dPhidn1/(2*np.pi*self.d[i]) + dPhidn0/(np.pi*self.d[i]**2), weights=self.w2[i], mode='nearest')*self.delta - convolve1d(dPhidn3, weights=self.w3[i], mode='nearest')*self.delta + convolve1d(dPhidn2vec0+dPhidn1vec0/(2*np.pi*self.d[i]), weights=self.w2vec[i], mode='nearest')*self.delta
 
-        del dPhidn0,dPhidn1,dPhidn2,dPhidn3,dPhidn1vec0,dPhidn2vec0
+            del dPhidn0,dPhidn1,dPhidn2,dPhidn3,dPhidn1vec0,dPhidn2vec0
 
-        for i in range(self.species):
-            if self.ecmethod == 'PB':
-                self.c1ec[i,:] = 0.0
-            elif self.ecmethod == 'BFD':
-                self.c1ec[i,:] = 0.0
-                for j in range(self.species):
-                    self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
-            elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
-                dPhieledn = -self.lB*(self.Z[i]**2*self.Gamma+2*self.d[i]*self.Eta*self.Z[i]-self.Eta**2*self.d[i]**3*(2.0/3.0-self.Gamma*self.d[i]/3.0))/(1+self.Gamma*self.d[i])
-                self.c1ec[i,:] = -convolve1d(dPhieledn, weights=self.ws[i], mode='nearest')*self.delta
-                del dPhieledn
-                for j in range(self.species):
-                    self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+            for i in range(self.species):
+                if self.ecmethod == 'BFD':
+                    self.c1ec[i,:] = 0.0
+                    for j in range(self.species):
+                        self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+                elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
+                    dPhieledn = -self.lB*(self.Z[i]**2*self.Gamma+2*self.d[i]*self.Eta*self.Z[i]-self.Eta**2*self.d[i]**3*(2.0/3.0-self.Gamma*self.d[i]/3.0))/(1+self.Gamma*self.d[i])
+                    self.c1ec[i,:] = -convolve1d(dPhieledn, weights=self.ws[i], mode='nearest')*self.delta
+                    del dPhieledn
+                    for j in range(self.species):
+                        self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+
+            self.c1exc = self.c1hs+self.c1ec
         
         # Coulomb c1
         self.c1coul = -self.Z[:,np.newaxis]*self.psi
 
-        self.c1exc = self.c1hs+self.c1ec
         self.c1 = self.c1exc+self.c1coul
 
     def Calculate_mu(self):
-        # HS chemical potential
-        n3 = np.sum(self.rhob*np.pi*self.d**3/6)
-        n2 = np.sum(self.rhob*np.pi*self.d**2)
-        n1 = np.sum(self.rhob*self.d/2)
-        n0 = np.sum(self.rhob)
-
-        if self.fmtmethod == 'RF' or self.fmtmethod == 'WBI': 
-            phi2 = 1.0
-            dphi2dn3 = 0.0
-        elif self.fmtmethod == 'WBII': 
-            phi2 = phi2func(n3)
-            dphi2dn3 = dphi2dnfunc(n3)
-
-        if self.fmtmethod == 'WBI': 
-            phi3 = phi1func(n3)
-            dphi3dn3 = dphi1dnfunc(n3)
-        elif self.fmtmethod == 'WBII': 
-            phi3 = phi3func(n3)
-            dphi3dn3 = dphi3dnfunc(n3)
-        else: 
-            phi3 = 1.0
-            dphi3dn3 = 0.0
-
-        dPhidn0 = -np.log(1-n3)
-        dPhidn1 = n2*phi2/(1-n3)
-        dPhidn2 = n1*phi2/(1-n3) + (3*n2**2)*phi3/(24*np.pi*(1-n3)**2)
-        dPhidn3 = n0/(1-n3) +(n1*n2)*(dphi2dn3 + phi2/(1-n3))/(1-n3) + (n2**3)*(dphi3dn3+2*phi3/(1-n3))/(24*np.pi*(1-n3)**2)
-
         self.muid = np.log(self.rhob)
 
-        self.muhs = dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6
-
-        # EC chemical potential
-        if self.ecmethod == 'PB' or self.ecmethod == 'BFD':
-            self.muec = np.zeros_like(self.Z)
+        if self.ecmethod == 'PB':
+            self.muexc = np.zeros_like(self.rhob)
         else:
-            self.muec = -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
+            # HS chemical potential
+            n3 = np.sum(self.rhob*np.pi*self.d**3/6)
+            n2 = np.sum(self.rhob*np.pi*self.d**2)
+            n1 = np.sum(self.rhob*self.d/2)
+            n0 = np.sum(self.rhob)
 
-        self.muexc = self.muhs+self.muec
+            if self.fmtmethod == 'RF' or self.fmtmethod == 'WBI': 
+                phi2 = 1.0
+                dphi2dn3 = 0.0
+            elif self.fmtmethod == 'WBII': 
+                phi2 = phi2func(n3)
+                dphi2dn3 = dphi2dnfunc(n3)
+
+            if self.fmtmethod == 'WBI': 
+                phi3 = phi1func(n3)
+                dphi3dn3 = dphi1dnfunc(n3)
+            elif self.fmtmethod == 'WBII': 
+                phi3 = phi3func(n3)
+                dphi3dn3 = dphi3dnfunc(n3)
+            else: 
+                phi3 = 1.0
+                dphi3dn3 = 0.0
+
+            dPhidn0 = -np.log(1-n3)
+            dPhidn1 = n2*phi2/(1-n3)
+            dPhidn2 = n1*phi2/(1-n3) + (3*n2**2)*phi3/(24*np.pi*(1-n3)**2)
+            dPhidn3 = n0/(1-n3) +(n1*n2)*(dphi2dn3 + phi2/(1-n3))/(1-n3) + (n2**3)*(dphi3dn3+2*phi3/(1-n3))/(24*np.pi*(1-n3)**2)
+
+            self.muhs = dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6
+
+            # EC chemical potential
+            if self.ecmethod == 'PB' or self.ecmethod == 'BFD':
+                self.muec = np.zeros_like(self.Z)
+            else:
+                self.muec = -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
+
+            self.muexc = self.muhs+self.muec
+
         self.mu = self.muid + self.muexc
 
     def Calculate_Equilibrium(self,method='picard',logoutput=False):
