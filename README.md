@@ -25,7 +25,14 @@ The excess free-energy is written as
 
 where <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{hs}}" title="\inline F^{\textrm{hs}}" /> is the hard-sphere excess contribution and <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{ec}}" title="\inline F^{\textrm{ec}}" /> is the electrostatic correlation excess contribution. 
 
+The hard-sphere contribution, <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{hs}}" title="\inline F^{\textrm{hs}}" />, represents the hard-sphere exclusion volume correlation and it can be described using different formulations of the fundamental measure theory (FMT) as
+- **R**osenfeld **F**unctional (**RF**) - 
+- **W**hite **B**ear version **I** (**WBI**) - 
+- **W**hite **B**ear version **II** (**WBII**) - 
+
 The electrostatic correlation <a href="https://latex.codecogs.com/gif.latex?F%5E%5Ctext%7Bec%7D" target="_blank"><img src="https://latex.codecogs.com/gif.latex?F%5E%5Ctext%7Bec%7D" title="F^{\textrm{ec}}" /></a> can be described using different approximations as
 - **M**ean-**F**ield **T**heory (**MFT**) - <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{ec}}&space;=&space;0" title="\inline F^{\textrm{ec}} = 0" />
 - **B**ulk **F**luid **D**ensity (**BFD**) - [Kierlik and Rosinberg, Phys.Rev.A 44, 5025 (1991)](https://doi.org/10.1103/PhysRevA.44.5025); [Y. Rosenfeld, J. Chem. Phys. 98, 8126 (1993)](https://doi.org/10.1063/1.464569)
 - **f**unctionalized **M**ean **S**pherical **A**pproximation (**fMSA**) - [Roth and Gillespie, J. Phys.: Condens. Matter 28, 244006 (2016)](https://doi.org/10.1088/0953-8984/28/24/244006)
+
+The thermodynamic equilibrium is obtained by minimizing the grand-potential, <img src="https://latex.codecogs.com/svg.image?\inline&space;\Omega" title="\inline \Omega" />, which can be obtained by the functional derivatives, such that, the equilibrium condition for each charged component is given by 
