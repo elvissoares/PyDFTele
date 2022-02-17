@@ -10,6 +10,10 @@ $$ \Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] = F_{id}[\{\rho_i(\bo
 & + \sum_i \int_{V} d \boldsymbol{r}  [V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i] \rho_i(\boldsymbol{r})+ \int_{\partial V}d \boldsymbol{r} \sigma(\boldsymbol{r}) \psi(\boldsymbol{r}) 
 \end{align*}" /></a>
 
+The Coulomb's free-energy <img src="https://latex.codecogs.com/svg.image?F^\text{coul}" title="F^\text{coul}" /> is obtained by the addition of the electric field energy density and the minimal-coupling of the interaction between the electrostatic potential <img src="https://latex.codecogs.com/svg.image?\psi(\boldsymbol{r})" title="\psi(\boldsymbol{r})" /> and the charge density <img src="https://latex.codecogs.com/svg.image?\sum_i&space;Z_i&space;e\rho_i(\boldsymbol{r})" title="\sum_i Z_i e\rho_i(\boldsymbol{r})" />, and it can be written as 
+<img src="https://latex.codecogs.com/svg.image?F^\text{coul}&space;=&space;-\int_V&space;d\boldsymbol{r}\&space;\frac{\epsilon_0&space;\epsilon_r}{2}&space;|\nabla{\psi(\boldsymbol{r})}|^2&space;&plus;&space;&space;\int_{V}&space;d\boldsymbol{r}\&space;\sum_i&space;Z_i&space;e&space;\rho_{i}(\boldsymbol{r})&space;\psi(\boldsymbol{r})" title="F^\text{coul} = -\int_V d\boldsymbol{r}\ \frac{\epsilon_0 \epsilon_r}{2} |\nabla{\psi(\boldsymbol{r})}|^2 + \int_{V} d\boldsymbol{r}\ \sum_i Z_i e \rho_{i}(\boldsymbol{r}) \psi(\boldsymbol{r})" />
+where <img src="https://latex.codecogs.com/svg.image?Z_i" title="Z_i" /> is the valence of the ion i, <img src="https://latex.codecogs.com/svg.image?e" title="e" />is the elementary charge, <img src="https://latex.codecogs.com/svg.image?\epsilon_0" title="\epsilon_0" /> is the vacuum permittivity, and <img src="https://latex.codecogs.com/svg.image?\epsilon_r" title="\epsilon_r" /> is the relative permittivity.
+
 The excess free-energy is written as
 <!---
 $$F_{exc}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] = F_{hs}[\{\rho_i(\boldsymbol{r})\}] + F_{ec}[\{\rho_i(\boldsymbol{r})\}] $$

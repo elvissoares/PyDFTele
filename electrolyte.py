@@ -14,7 +14,7 @@ from scipy.ndimage import convolve1d
 from scipy import optimize
 from scipy.linalg import solve_banded
 from numba import jit, njit, vectorize, prange, int32, float32, float64    # import the types
-from numba.experimental import jitclass
+# from numba.experimental import jitclass
 import matplotlib.pyplot as plt
 from poisson1d import Poisson1D
 from optimizer import Optimize
@@ -94,17 +94,19 @@ def Gammaparameter(rhoarray,a,Z,lB):
     return Gamma
 
 " The DFT model for electrolyte solutions using the generalized grand potential"
-spec = [
-    ('N', int32),   
-    ('delta', float32),  
-    ('L', float32),   
-    ('species', int32), 
-    ('d', float32[:]), 
-    ('Z', float32[:]), 
-    ('rhob', float32[:]), 
-    ('x', float32[:]), 
-    ('rho', float32[:,:]), 
-]
+
+" The hard-sphere FMT functional implemented are the following: "
+" fmtmethod = RF (Rosenfeld functional) "
+"           = WBI (White Bear version I) "
+"           = WBII (White Bear version II) "
+
+" The electrostatic correlation functional implemented are the following: "
+" ecmethod = PB (Poisson-Boltzmann)  "
+"          = MFT (Mean-Field Theory) "
+"          = BFD (Bulk fluid density expansion) "
+"          = fMSA (functionalized Mean Spherical Approximation symmetrical) "
+"          = fMSA-asymmetrical (functionalized Mean Spherical Approximation assymetrical) "
+
 
 # @jitclass(spec)
 class ElectrolyteDFT():
@@ -281,18 +283,22 @@ class ElectrolyteDFT():
             aux = -self.n0*np.log(self.oneminusn3)+(self.phi2/self.oneminusn3)*(self.n1*self.n2-(self.n1vec*self.n2vec)) + (self.phi3/(24*np.pi*self.oneminusn3**2))*(self.n2*self.n2*self.n2-3*self.n2*(self.n2vec*self.n2vec))
             self.Fhs = np.sum(aux)*self.delta
 
-            if self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
+            if self.ecmethod == 'MFT':
+                self.Fec = 0.0
+            elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
                 aux = self.Gamma**3/(3*np.pi)
                 for i in range(self.species):
                     aux += -self.lB*self.q0[i,:]*self.Z[i]*(self.Z[i]*self.Gamma+self.Eta*self.d[i])/(1+self.Gamma*self.d[i])
                     for j in range(self.species):
                         aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
+                self.Fec = np.sum(aux)*self.delta
             elif self.ecmethod == 'BFD':
-                aux = np.ones_like(self.x)*(self.Gammabulk**3/(3*np.pi) - np.sum(self.lB*self.rhob*self.Z*(self.Z*self.Gammabulk+self.Etabulk*self.d)/(1+self.Gammabulk*self.d)))
+                aux = np.ones_like(self.x)*(self.Gammabulk**3/(3*np.pi) - np.sum(self.lB*self.rhob*self.Z*(self.Z*self.Gammabulk+self.Etabulk*self.d)/(1+self.Gammabulk*self.d))) 
                 for i in range(self.species):
+                    aux[i,:] = -(self.lB*(self.Z[i]**2*self.Gammabulk+2*self.d[i]*self.Etabulk*self.Z[i]-self.Etabulk**2*self.d[i]**3*(2.0/3.0-self.Gammabulk*self.d[i]/3.0))/(1+self.Gammabulk*self.d[i]))*(self.rho[i,:]-self.rhob[i])
                     for j in range(self.species):
                         aux += 0.5*(self.rho[i,:]-self.rhob[i])*convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
-            self.Fec = np.sum(aux)*self.delta
+                self.Fec = np.sum(aux)*self.delta
 
         self.F = self.Fid+self.Fhs+self.Fec+self.Fcoul
 
@@ -318,8 +324,8 @@ class ElectrolyteDFT():
             # self.psi[:] = -(4*np.pi*self.lB)*self.sigma[0]*self.x - (4*np.pi*self.lB)*Q[::-1]*self.delta -(4*np.pi*self.lB)*self.x*np.cumsum(self.q)*self.delta
 
     def Calculate_c1(self):
-        # HS c1
         if self.ecmethod == 'PB':
+            self.c1ec[:,:] = 0.0
             self.c1exc[:,:] = 0.0
         else:
             dPhidn0 = -np.log(self.oneminusn3 )
@@ -337,12 +343,15 @@ class ElectrolyteDFT():
 
             del dPhidn0,dPhidn1,dPhidn2,dPhidn3,dPhidn1vec0,dPhidn2vec0
 
-            for i in range(self.species):
-                if self.ecmethod == 'BFD':
-                    self.c1ec[i,:] = 0.0
+            if self.ecmethod == 'MFT':
+                self.c1ec[:,:] = 0.0
+            elif self.ecmethod == 'BFD':
+                for i in range(self.species):
+                    self.c1ec[i,:] = -self.lB*(self.Z[i]**2*self.Gammabulk+2*self.d[i]*self.Etabulk*self.Z[i]-self.Etabulk**2*self.d[i]**3*(2.0/3.0-self.Gammabulk*self.d[i]/3.0))/(1+self.Gammabulk*self.d[i])
                     for j in range(self.species):
                         self.c1ec[i,:] += -convolve1d((self.rho[j,:]-self.rhob[j]), weights=self.phi[i,j], mode='nearest')*self.delta
-                elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
+            elif self.ecmethod == 'fMSA' or self.ecmethod == 'fMSA-asymmetrical':
+                for i in range(self.species):
                     dPhieledn = -self.lB*(self.Z[i]**2*self.Gamma+2*self.d[i]*self.Eta*self.Z[i]-self.Eta**2*self.d[i]**3*(2.0/3.0-self.Gamma*self.d[i]/3.0))/(1+self.Gamma*self.d[i])
                     self.c1ec[i,:] = -convolve1d(dPhieledn, weights=self.ws[i], mode='nearest')*self.delta
                     del dPhieledn
@@ -393,8 +402,10 @@ class ElectrolyteDFT():
             self.muhs = dPhidn0+dPhidn1*self.d/2+dPhidn2*np.pi*self.d**2+dPhidn3*np.pi*self.d**3/6
 
             # EC chemical potential
-            if self.ecmethod == 'PB' or self.ecmethod == 'BFD':
+            if self.ecmethod == 'MFT':
                 self.muec = np.zeros_like(self.Z)
+            elif self.ecmethod == 'BFD':
+                self.muec = -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
             else:
                 self.muec = -self.lB*(self.Z**2*self.Gammabulk+2*self.d*self.Etabulk*self.Z-self.Etabulk**2*self.d**3*(2.0/3.0-self.Gammabulk*self.d/3.0))/(1+self.Gammabulk*self.d)
 
