@@ -1,11 +1,11 @@
 # PyDFTele
 The Density Functional Theory for Electrolyte Solutions
 
-<!---
-$$ \Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] = F_{id}[\{\rho_i(\boldsymbol{r})\}] + F_{exc}[\{\rho_i(\boldsymbol{r})\}]+ F_{coul}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] + \sum_i \int_{V} [V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i] \rho_i(\boldsymbol{r}) d \boldsymbol{r}+ \int_{\partial V}\sigma(\boldsymbol{r}) \psi(\boldsymbol{r})  d \boldsymbol{r} $$)
--->
+For an electrolyte solution close to a charged surface with temperature <img src="https://latex.codecogs.com/svg.image?\inline&space;T" title="\inline T" />, total volume <img src="https://latex.codecogs.com/svg.image?\inline&space;V" title="\inline V" />, and chemical potential of each species <img src="https://latex.codecogs.com/svg.image?\inline&space;V" title="\inline V" /> specified, the grand potential, <img src="https://latex.codecogs.com/svg.image?\inline&space;\Omega" title="\inline \Omega" />, is written as
 
 <img src="https://latex.codecogs.com/svg.image?\begin{align*}\Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})]&space;=\&space;&&space;F^\text{id}[\{\rho_i(\boldsymbol{r})\}]&space;&plus;&space;F^\text{exc}[\{\rho_i(\boldsymbol{r})\}]&plus;&space;F^\text{coul}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})]&space;\\&space;&&space;&plus;&space;\sum_i&space;\int_{V}&space;d&space;\boldsymbol{r}&space;&space;[V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i]&space;\rho_i(\boldsymbol{r})&plus;&space;\int_{\partial&space;V}d&space;\boldsymbol{r}&space;\sigma(\boldsymbol{r})&space;\psi(\boldsymbol{r})\end{align*}" title="\begin{align*}\Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] =\ & F^\text{id}[\{\rho_i(\boldsymbol{r})\}] + F^\text{exc}[\{\rho_i(\boldsymbol{r})\}]+ F^\text{coul}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] \\ & + \sum_i \int_{V} d \boldsymbol{r} [V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i] \rho_i(\boldsymbol{r})+ \int_{\partial V}d \boldsymbol{r} \sigma(\boldsymbol{r}) \psi(\boldsymbol{r})\end{align*}" />
+
+where <img src="https://latex.codecogs.com/svg.image?\rho_i(\boldsymbol{r})" title="\rho_i(\boldsymbol{r})" /> is the local density of the component i, <img src="https://latex.codecogs.com/svg.image?\sigma" title="\sigma" /> is the surface charge density, <img src="https://latex.codecogs.com/svg.image?\psi(\boldsymbol{r})" title="\psi(\boldsymbol{r})" /> is the local electrostatic potential, and <img src="https://latex.codecogs.com/svg.image?V^\text{ext}_{i}" title="V^\text{ext}_{i}" /> is the external potential. The volume of the system is <img src="https://latex.codecogs.com/svg.image?\inline&space;V&space;" title="\inline V " /> and <img src="https://latex.codecogs.com/svg.image?\inline&space;\partial&space;V&space;" title="\inline \partial V " /> is the boundary of the system. 
 
 The ideal-gas contribution <img src="https://latex.codecogs.com/svg.image?\inline&space;F^\text{id}" title="\inline F^\text{id}" /> is given by the exact expression
 
@@ -26,13 +26,29 @@ The excess free-energy is written as
 where <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{hs}}" title="\inline F^{\textrm{hs}}" /> is the hard-sphere excess contribution and <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{ec}}" title="\inline F^{\textrm{ec}}" /> is the electrostatic correlation excess contribution. 
 
 The hard-sphere contribution, <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{hs}}" title="\inline F^{\textrm{hs}}" />, represents the hard-sphere exclusion volume correlation and it can be described using different formulations of the fundamental measure theory (FMT) as
-- **R**osenfeld **F**unctional (**RF**) - 
-- **W**hite **B**ear version **I** (**WBI**) - 
-- **W**hite **B**ear version **II** (**WBII**) - 
+
+- [x] **R**osenfeld **F**unctional (**RF**) - [Rosenfeld, Y., Phys. Rev. Lett. 63, 980–983 (1989)](https://link.aps.org/doi/10.1103/PhysRevLett.63.980)
+- [x] **W**hite **B**ear version **I** (**WBI**) - [Yu, Y.-X. & Wu, J., J. Chem. Phys. 117, 10156–10164 (2002)](http://aip.scitation.org/doi/10.1063/1.1520530); [Roth, R., Evans, R., Lang, A. & Kahl, G., J. Phys. Condens. Matter 14, 12063–12078 (2002)](https://iopscience.iop.org/article/10.1088/0953-8984/14/46/313)
+- [x] **W**hite **B**ear version **II** (**WBII**) - [Hansen-Goos, H. & Roth, R. J., Phys. Condens. Matter 18, 8413–8425 (2006)](https://iopscience.iop.org/article/10.1088/0953-8984/18/37/002)
 
 The electrostatic correlation <a href="https://latex.codecogs.com/gif.latex?F%5E%5Ctext%7Bec%7D" target="_blank"><img src="https://latex.codecogs.com/gif.latex?F%5E%5Ctext%7Bec%7D" title="F^{\textrm{ec}}" /></a> can be described using different approximations as
-- **M**ean-**F**ield **T**heory (**MFT**) - <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{ec}}&space;=&space;0" title="\inline F^{\textrm{ec}} = 0" />
-- **B**ulk **F**luid **D**ensity (**BFD**) - [Kierlik and Rosinberg, Phys.Rev.A 44, 5025 (1991)](https://doi.org/10.1103/PhysRevA.44.5025); [Y. Rosenfeld, J. Chem. Phys. 98, 8126 (1993)](https://doi.org/10.1063/1.464569)
-- **f**unctionalized **M**ean **S**pherical **A**pproximation (**fMSA**) - [Roth and Gillespie, J. Phys.: Condens. Matter 28, 244006 (2016)](https://doi.org/10.1088/0953-8984/28/24/244006)
+- [x] **M**ean-**F**ield **T**heory (**MFT**) - <img src="https://latex.codecogs.com/svg.image?\inline&space;F^{\textrm{ec}}&space;=&space;0" title="\inline F^{\textrm{ec}} = 0" />
+- [x] **B**ulk **F**luid **D**ensity (**BFD**) - [Kierlik and Rosinberg, Phys.Rev.A 44, 5025 (1991)](https://doi.org/10.1103/PhysRevA.44.5025); [Y. Rosenfeld, J. Chem. Phys. 98, 8126 (1993)](https://doi.org/10.1063/1.464569)
+- [x] **f**unctionalized **M**ean **S**pherical **A**pproximation (**fMSA**) - [Roth and Gillespie, J. Phys.: Condens. Matter 28, 244006 (2016)](https://doi.org/10.1088/0953-8984/28/24/244006)
+- [ ] **R**eference **F**luid **D**ensity (**RFD**) - [Gillespie, D., Nonner, W. & Eisenberg, R. S., J. Phys. Condens. Matter 14, 12129–12145 (2002)](https://iopscience.iop.org/article/10.1088/0953-8984/14/46/317); [Gillespie, D., Valiskó, M. & Boda, D., J. Phys. Condens. Matter 17, 6609–6626 (2005)](https://iopscience.iop.org/article/10.1088/0953-8984/17/42/002)
 
-The thermodynamic equilibrium is obtained by minimizing the grand-potential, <img src="https://latex.codecogs.com/svg.image?\inline&space;\Omega" title="\inline \Omega" />, which can be obtained by the functional derivatives, such that, the equilibrium condition for each charged component is given by 
+Finally, The chemical potential for each ionic species is defined as <img src="https://latex.codecogs.com/svg.image?\mu_i&space;=&space;\mu_i^\text{id}&space;&plus;&space;\mu_i^\text{exc}" title="\mu_i = \mu_i^\text{id} + \mu_i^\text{exc}" />, where superscripts id and exc refer to ideal and excess contributions, respectively.
+
+The thermodynamic equilibrium is obtained by the minimum of the grand-potential, <img src="https://latex.codecogs.com/svg.image?\inline&space;\Omega" title="\inline \Omega" />, which can be obtained by the functional derivatives, such that, the equilibrium condition for each charged component is given by 
+
+<img src="https://latex.codecogs.com/svg.image?&space;\left.&space;\frac{\delta&space;\Omega}{\delta&space;\rho_i(\boldsymbol{r})}&space;\right|_{\{\mu_k\},V,T}&space;=&space;k_B&space;T&space;\ln[\Lambda_i^3&space;\rho_i(\boldsymbol{r})]&space;&plus;&space;\frac{\delta&space;F^\text{exc}}{\delta&space;\rho_i(\boldsymbol{r})}&space;&plus;&space;Z_i&space;e&space;\psi(\boldsymbol{r})&space;&plus;&space;&space;V^{\text{ext}}_i(\boldsymbol{r})&space;&space;-&space;\mu_i&space;=0" title=" \left. \frac{\delta \Omega}{\delta \rho_i(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = k_B T \ln[\Lambda_i^3 \rho_i(\boldsymbol{r})] + \frac{\delta F^\text{exc}}{\delta \rho_i(\boldsymbol{r})} + Z_i e \psi(\boldsymbol{r}) + V^{\text{ext}}_i(\boldsymbol{r}) - \mu_i =0" />
+
+and for the electrostatic potential it is 
+
+<img src="https://latex.codecogs.com/svg.image?&space;\left.&space;\frac{\delta&space;\Omega}{\delta&space;\psi(\boldsymbol{r})}&space;\right|_{\{\mu_k\},V,T}&space;=&space;\epsilon_0&space;\epsilon_r\nabla^2{\psi(\boldsymbol{r})}&space;&plus;&space;\sum_i&space;Z_i&space;e&space;\rho_i(\boldsymbol{r})&space;=0" title=" \left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = \epsilon_0 \epsilon_r\nabla^2{\psi(\boldsymbol{r})} + \sum_i Z_i e \rho_i(\boldsymbol{r}) =0" />
+
+valid in the whole volume <img src="https://latex.codecogs.com/svg.image?\inline&space;V&space;" title="\inline V " />, this is the well-known Poisson's equation of the electrostatic potential with the boundary conditions
+
+<img src="https://latex.codecogs.com/svg.image?\left.&space;\frac{\delta&space;\Omega}{\delta&space;\psi(\boldsymbol{r})}&space;\right|_{\{\mu_k\},V,T}&space;=&space;\left.&space;\epsilon_0&space;\epsilon_r&space;\boldsymbol{\hat{n}}(\boldsymbol{r})&space;\cdot&space;\boldsymbol{\nabla}{\psi(\boldsymbol{r})}&space;\right|_{\partial&space;V}&space;&plus;&space;\sigma(\boldsymbol{r})&space;=&space;0" title="\left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = \left. \epsilon_0 \epsilon_r \boldsymbol{\hat{n}}(\boldsymbol{r}) \cdot \boldsymbol{\nabla}{\psi(\boldsymbol{r})} \right|_{\partial V} + \sigma(\boldsymbol{r}) = 0" />
+
+valid on the boundary surface <img src="https://latex.codecogs.com/svg.image?\inline&space;\partial&space;V&space;" title="\inline \partial V " />, where <img src="https://latex.codecogs.com/svg.image?\inline&space;\boldsymbol{\hat{n}}(\boldsymbol{r})" title="\inline \boldsymbol{\hat{n}}(\boldsymbol{r})" /> is denoting the vector normal to the surface pointing inward to the system.
