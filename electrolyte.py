@@ -121,7 +121,6 @@ class ElectrolyteDFT():
         self.d = d
         self.species = d.size
         self.Z = Z
-        self.rhob = rhob
         self.x = np.linspace(0,self.L,N)
 
         self.rho = np.empty((self.species,self.N),dtype=np.float32)
@@ -148,7 +147,6 @@ class ElectrolyteDFT():
 
         # defining the EC terms
         self.lB = lB # in nm
-        self.kD = np.sqrt(4*np.pi*self.lB*np.sum(self.Z**2*self.rhob))
         self.q0 = np.zeros((self.species,self.N),dtype=np.float32)
         self.phi = np.zeros((self.species,self.species),dtype=object)
         self.phiint = np.zeros((self.species,self.species),dtype=np.float32)
@@ -159,6 +157,14 @@ class ElectrolyteDFT():
         self.Gamma = np.zeros(N,dtype=np.float32)
         self.Eta = np.zeros(N,dtype=np.float32)
         self.psi = np.zeros(N,dtype=np.float32)
+
+        self.Set_BulkDensities(rhob)
+
+    def Set_BulkDensities(self,rhob):
+
+        self.rhob = rhob
+
+        self.kD = np.sqrt(4*np.pi*self.lB*np.sum(self.Z**2*self.rhob))
 
         self.Gammabulk = Gammabulkparameter(self.rhob,self.d,self.Z,self.lB)
         self.Etabulk = Etabulkfunc(self.rhob,self.d,self.Z,self.Gammabulk)
