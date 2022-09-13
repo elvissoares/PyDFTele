@@ -58,4 +58,7 @@ valid on the boundary surface $\partial V$, where $\boldsymbol{\hat{n}}(\boldsym
 ## Voukadinova
 |![Figure1](https://github.com/elvissoares/PyDFTele/blob/main/examples/ionprofile-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D0.01M.png)|![Figure2](https://github.com/elvissoares/PyDFTele/blob/main/examples/potential-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D0.01M.png)|
 |:--:|:--:|
-| <b>Fig.1 - The ionic density profiles of an 1:1 electrolyte solution with c_+=0.01 and σ = -0.5C/m². </b>| <b>Fig.2 - The electrostatic potential profile of an 1:1 electrolyte solution with c_+=0.01 and σ = -0.5C/m². </b>|
+| <b>Fig.1 - The ionic density profiles of an 1:1 electrolyte solution with c_+= 0.01 M and σ = -0.5C/m². </b>| <b>Fig.2 - The electrostatic potential profile of an 1:1 electrolyte solution with c_+= 0.01 M and σ = -0.5C/m². </b>|
+|![Figure3](https://github.com/elvissoares/PyDFTele/blob/main/examples/ionprofile-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D1.0M.png)|![Figure4](https://github.com/elvissoares/PyDFTele/blob/main/examples/potential-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D1.0M.png)|
+|:--:|:--:|
+| <b>Fig.3 - The ionic density profiles of an 1:1 electrolyte solution with c_+= 1.0 M and σ = -0.5C/m². </b>| <b>Fig.4 - The electrostatic potential profile of an 1:1 electrolyte solution with c_+= 1.0 M and σ = -0.5C/m². </b>|

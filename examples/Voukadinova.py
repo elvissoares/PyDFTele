@@ -9,10 +9,10 @@ import pandas as pd
 plt.style.use(['science'])
 
 d = np.array([0.3,0.3])
-L = 12.0
+L = 3.0
 Z = np.array([-1,1])
 
-c = 0.01 #mol/L (equivalent to ionic strength for 1:1)
+c = 1.0 #mol/L (equivalent to ionic strength for 1:1)
 rhob = np.array([-(Z[1]/Z[0])*c,c])*6.022e23/1.0e24 # particles/nm^3
 
 ele = ElectrolyteDFT1D(L=L,d=d,Z=Z,ecmethod='BFD')
@@ -36,7 +36,7 @@ ele.Update_System()
 
 ele.Calculate_Equilibrium(method='fire',dt=0.002,rtol=1e-3,atol=1e-4,logoutput=True)
 
-sheetname='Fig5-Z+=1-rho+=0.01M'
+sheetname='Fig5-Z+=1-rho+='+str(c)+'M'
 df = pd.read_excel('MCdata/MCdata-Voukadinova2018.xls',sheet_name=sheetname) 
 
 cion = np.array([-(Z[1]/Z[0])*c,c]) # from charge equilibrium
@@ -49,10 +49,10 @@ plt.plot(ele.z,ele.rho[1]/rhob[1],'k')
 plt.xlabel(r'$z$ (nm)')
 plt.ylabel(r'$\rho_i(z)/\rho_b$')
 plt.xlim(0.0,2)
-plt.ylim(1e-3,1e4)
-plt.text(0.7,5e0,'$c_+ = 0.01$ M', ha='center', va='center')
-plt.text(0.7,2e0,'$Z_+ = 1$ and $a_+ = 0.3$ nm', ha='center', va='center')
-plt.text(0.7,5e-1,'$\sigma = -0.5$ C/m$^2$', ha='center', va='center')
+plt.ylim(1e-3,1e2)
+plt.text(1.2,1e-1,'$c_+ = $'+str(c)+' M', ha='center', va='center')
+plt.text(1.2,4e-2,'$Z_+ = 1$ and $a_+ = 0.3$ nm', ha='center', va='center')
+plt.text(1.2,2e-2,'$\sigma = -0.5$ C/m$^2$', ha='center', va='center')
 plt.legend(loc='upper right',ncol=1)
 plt.savefig('ionprofile-electrolyte-Voukadinova2018-'+sheetname+'.png',dpi=200)
 plt.show()
@@ -62,9 +62,9 @@ plt.xlim(0.0,2)
 plt.ylim(top=0)
 plt.xlabel(r'$z$ (nm)')
 plt.ylabel(r'$\beta e \psi(z)$')
-plt.text(1.5,-5,'$c_+ = 0.01$ M', ha='center', va='center')
-plt.text(1.5,-6,'$Z_+ = 1$ and $a_+ = 0.3$ nm', ha='center', va='center')
-plt.text(1.5,-7,'$\sigma = -0.5$ C/m$^2$', ha='center', va='center')
+plt.text(1.2,-5.5,'$c_+ = $'+str(c)+' M', ha='center', va='center')
+plt.text(1.2,-6,'$Z_+ = 1$ and $a_+ = 0.3$ nm', ha='center', va='center')
+plt.text(1.2,-6.5,'$\sigma = -0.5$ C/m$^2$', ha='center', va='center')
 plt.savefig('potential-electrolyte-Voukadinova2018-'+sheetname+'.png',dpi=200)
 plt.show()
 
