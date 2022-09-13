@@ -3,11 +3,11 @@ The Density Functional Theory for Electrolyte Solutions
 
 For an electrolyte solution close to a charged surface with temperature <img src="https://latex.codecogs.com/svg.image?\inline&space;T" title="\inline T" />, total volume <img src="https://latex.codecogs.com/svg.image?\inline&space;V" title="\inline V" />, and chemical potential of each species <img src="https://latex.codecogs.com/svg.image?\inline&space;\mu_i" title="\inline \mu_i" /> specified, the grand potential, <img src="https://latex.codecogs.com/svg.image?\inline&space;\Omega" title="\inline \Omega" />, is written as
 
-$$\begin{align*}\Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] =\ & F^\text{id}[\{\rho_i(\boldsymbol{r})\}] + F^\text{exc}[\{\rho_i(\boldsymbol{r})\}]+ F^\text{coul}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] \\ & + \sum_i \int_{V} d \boldsymbol{r} [V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i] \rho_i(\boldsymbol{r})+ \int_{\partial V}d \boldsymbol{r} \sigma(\boldsymbol{r}) \psi(\boldsymbol{r})\end{align*}$$
+$$\Omega[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})] = F^\text{id}[\{\rho_i(\boldsymbol{r})\}] + F^\text{exc}[\{\rho_i(\boldsymbol{r})\}]+ F^\text{coul}[\{\rho_i(\boldsymbol{r})\},\psi(\boldsymbol{r})]+ \sum_i \int_{V} d \boldsymbol{r} [V_i^{(\text{ext})}(\boldsymbol{r})-\mu_i] \rho_i(\boldsymbol{r})+ \int_{\partial V}d \boldsymbol{r} \sigma(\boldsymbol{r}) \psi(\boldsymbol{r})$$
 
-where <img src="https://latex.codecogs.com/svg.image?\rho_i(\boldsymbol{r})" title="\rho_i(\boldsymbol{r})" /> is the local density of the component i, <img src="https://latex.codecogs.com/svg.image?\sigma" title="\sigma" /> is the surface charge density, <img src="https://latex.codecogs.com/svg.image?\psi(\boldsymbol{r})" title="\psi(\boldsymbol{r})" /> is the local electrostatic potential, and <img src="https://latex.codecogs.com/svg.image?V^\text{ext}_{i}" title="V^\text{ext}_{i}" /> is the external potential. The volume of the system is <img src="https://latex.codecogs.com/svg.image?\inline&space;V&space;" title="\inline V " /> and <img src="https://latex.codecogs.com/svg.image?\inline&space;\partial&space;V&space;" title="\inline \partial V " /> is the boundary of the system. 
+where $\rho_i(\boldsymbol{r})$ is the local density of the component i, $\psi(\boldsymbol{r})$ is the local electrostatic potential, and $V^\text{ext}_{i}$ is the external potential. The volume of the system is V and $\partial V$ is the boundary of the system. 
 
-The ideal-gas contribution <img src="https://latex.codecogs.com/svg.image?\inline&space;F^\text{id}" title="\inline F^\text{id}" /> is given by the exact expression
+The ideal-gas contribution $F^\text{id}$ is given by the exact expression
 
 $$F^\text{id}[\{\rho_i (\boldsymbol{r})\}] = k_B T\sum_i \int_{V} d\boldsymbol{r}\ \rho_i(\boldsymbol{r})[\ln(\rho_i (\boldsymbol{r})\Lambda_i^3)-1]$$
 
@@ -41,15 +41,15 @@ Finally, The chemical potential for each ionic species is defined as $\mu_i = \m
 
 The thermodynamic equilibrium is obtained by the minimum of the grand-potential, $\Omega$, which can be obtained by the functional derivatives, such that, the equilibrium condition for each charged component is given by 
 
-$$\left. \frac{\delta \Omega}{\delta \rho_i(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = k_B T \ln[\Lambda_i^3 \rho_i(\boldsymbol{r})] + \frac{\delta F^\text{exc}}{\delta \rho_i(\boldsymbol{r})} + Z_i e \psi(\boldsymbol{r}) + V^{\text{ext}}_i(\boldsymbol{r}) - \mu_i =0$$
+$$\left. \frac{\delta \Omega}{\delta \rho_i(\boldsymbol{r})} \right\|_{\{\mu_k\},V,T} = k_B T \ln[\Lambda_i^3 \rho_i(\boldsymbol{r})] + \frac{\delta F^\text{exc}}{\delta \rho_i(\boldsymbol{r})} + Z_i e \psi(\boldsymbol{r}) + V^{\text{ext}}_i(\boldsymbol{r}) - \mu_i =0$$
 
 and for the electrostatic potential it is 
 
-$$\left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = \epsilon_0 \epsilon_r\nabla^2{\psi(\boldsymbol{r})} + \sum_i Z_i e \rho_i(\boldsymbol{r}) =0$$
+$$\left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right\|_{\{\mu_k\},V,T} = \epsilon_0 \epsilon_r\nabla^2{\psi(\boldsymbol{r})} + \sum_i Z_i e \rho_i(\boldsymbol{r}) =0$$
 
 valid in the whole volume V, this is the well-known Poisson's equation of the electrostatic potential with the boundary conditions
 
-$$\left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right|_{\{\mu_k\},V,T} = \left. \epsilon_0 \epsilon_r \boldsymbol{\hat{n}}(\boldsymbol{r}) \cdot \boldsymbol{\nabla}{\psi(\boldsymbol{r})} \right|_{\partial V} + \sigma(\boldsymbol{r}) = 0$$
+$$\left. \frac{\delta \Omega}{\delta \psi(\boldsymbol{r})} \right\|_{\{\mu_k\},V,T} = \left. \epsilon_0 \epsilon_r \boldsymbol{\hat{n}}(\boldsymbol{r}) \cdot \boldsymbol{\nabla}{\psi(\boldsymbol{r})} \right\|_{\partial V} + \sigma(\boldsymbol{r}) = 0$$
 
 valid on the boundary surface $\partial V$, where $\boldsymbol{\hat{n}}(\boldsymbol{r})$ is denoting the vector normal to the surface pointing inward to the system.
 
@@ -58,4 +58,4 @@ valid on the boundary surface $\partial V$, where $\boldsymbol{\hat{n}}(\boldsym
 ## Voukadinova
 |![Figure1](https://github.com/elvissoares/PyDFTele/blob/main/examples/ionprofile-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D0.01M.png)|![Figure2](https://github.com/elvissoares/PyDFTele/blob/main/examples/potential-electrolyte-Voukadinova2018-Fig5-Z%2B%3D1-rho%2B%3D0.01M.png)|
 |:--:|:--:|
-| <b>Fig.1 - The ionic density profiles of an 1:1 electrolyte solution with c_+=0.01 and sigma = -0.5C/m². </b>| <b>Fig.2 - The electrostatic potential profile of an 1:1 electrolyte solution with c_+=0.01 and sigma = -0.5C/m². </b>|
+| <b>Fig.1 - The ionic density profiles of an 1:1 electrolyte solution with c_+=0.01 and σ = -0.5C/m². </b>| <b>Fig.2 - The electrostatic potential profile of an 1:1 electrolyte solution with c_+=0.01 and σ = -0.5C/m². </b>|
